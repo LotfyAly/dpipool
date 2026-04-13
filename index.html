@@ -11,8 +11,8 @@
   Settings → API → Project URL & anon/public key
 ============================================================ -->
 <script>
-  const SUPABASE_URL = 'https://zbjnuntzsfakawrsahkl.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_gz42ihuz2TFp9b-G5HA1Sw_V-nwCKX3';
+  const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
+  const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -318,6 +318,7 @@ function checkConfig() {
 // ─── State ───────────────────────────────────────────────────
 const INITIAL_ELO = 1200;
 const K = 32;
+const RESET_PWD = 'Hetistijdvooreennieuwestart';
 const DEFAULT_NAMES = ["Anouk Zijlstra","Arjen Krist","David Fuhri","Dennis Meegdes","Dorte Rotteveel","Elise Oostenbrink","Femke Kapteijn","Ferry Witting","Floortje Cieraad","Fyodor Onck","Gert Jan Borst","Giovanni van Raam","Hans Jorritsma","Jacob Polak","Jacques Stuart","Jasper de Wit","Jasper Sonneveld","Jelle Bruns","Jesse Brandt","Jesse van Zuijlen","Jesse Warnaar","Joram Withagen","Judith Ekamper","Kirsten Pieters","Kitty van Zanten","Koen van Oosterhout","Laith Alzaher","Laurens Schrijver","Lizzy van der Beek","Lotfy Aly","Mara Oldewelt","Mark Officier","Mark Stoffers","Marvin van Kanten","Max Wiercx","Michel Verwoolde","Myrthe van der Lugt","Natasja Ooms","Nicholas Been","Niels de Lange","Niels Helmer","Ott Croll","Pieter de Rooij","Redginald Mones","Roan Hamminga","Robbert Leemans","Robbert van Staveren","Roland Reen","Rolf de Boer","Ruben van Weesep","Ruurd IJpma","Sasha Leemans","Stan de Rover","Thijs Witteveen","Ties Keurentjes","Tim ten Berge","Tjalling Veldhuis","Tom Bollemeijer","Veronique va der Steen","Wesley Jongerius","Wouter Lindenbergh","Alexander vd Berg v S.","Allard Mark Ebbers","Dick Waterink","Douwe Eijssen","Esmée Schuzsler","Ileen van den Berg","John Visée","Kees van der Sar","Kelly Stor","Nick van den Berg","Nicole Schouwenaar","Philine Goldbohm","Saar Calame","Sander Zuyderwijk","Yashica Peperkamp","Rob Vos"];
 
 let state = { players: [], matches: [], view: 'klassement', selectedPlayer: null };
@@ -325,6 +326,16 @@ let state = { players: [], matches: [], view: 'klassement', selectedPlayer: null
 // ─── Helpers ─────────────────────────────────────────────────
 function initials(n) {
   return n.split(' ').filter(Boolean).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
+}
+function displayName(p) {
+  const parts = p.name.trim().split(/\s+/);
+  const first = parts[0];
+  const hasDupe = state.players.some(x => x.id !== p.id && x.name.trim().split(/\s+/)[0] === first);
+  if (hasDupe) {
+    const last = parts[parts.length - 1];
+    return first + ' ' + last[0] + '.';
+  }
+  return first;
 }
 function getSorted() {
   return [...state.players].sort((a, b) => b.elo - a.elo);
@@ -460,7 +471,7 @@ async function submitMatch() {
   try {
     await saveMatch(winId, loseId, newWinElo, newLoseElo, delta);
     await loadFromDB();
-    showToast('+' + delta + ' ELO voor ' + winner.name.split(' ')[0] + '!');
+    showToast('+' + delta + ' ELO voor ' + displayName(winner) + '!');
     render();
   } catch(e) {
     showToast('Fout bij opslaan: ' + e.message);
@@ -485,18 +496,21 @@ async function addPlayer() {
 async function removePlayer(id) {
   const p = state.players.find(x => x.id === id);
   if (!p) return;
-  if (p.wins + p.losses > 0 && !confirm(p.name + ' heeft al wedstrijden gespeeld. Toch verwijderen?')) return;
+  if (p.wins + p.losses > 0 && !confirm(displayName(p) + ' heeft al wedstrijden gespeeld. Toch verwijderen?')) return;
   try {
     await deletePlayer(id);
     await loadFromDB();
     state.selectedPlayer = null;
-    showToast(p.name + ' verwijderd');
+    showToast(displayName(p) + ' verwijderd');
     render();
   } catch(e) { showToast('Fout: ' + e.message); }
 }
 
 async function resetAll() {
-  if (!confirm('Alle data verwijderen en opnieuw beginnen?')) return;
+  const pwd = prompt('Voer het resetwachtwoord in:');
+  if (pwd === null) return;
+  if (pwd !== RESET_PWD) { showToast('Onjuist wachtwoord'); return; }
+  if (!confirm('Weet je het zeker? Alle data wordt gewist.')) return;
   try {
     showToast('Bezig met resetten...');
     await resetAllData();
@@ -512,12 +526,12 @@ function filterPlayers(q) {
   const eloS = getSorted();
   const list = document.getElementById('player-list');
   if (!list) return;
-  const f = q ? alpha.filter(p => p.name.toLowerCase().includes(q)) : alpha;
+  const f = q ? alpha.filter(p => p.name.toLowerCase().includes(q) || displayName(p).toLowerCase().includes(q)) : alpha;
   list.innerHTML = f.map(p => {
     const rank = eloS.findIndex(x => x.id === p.id) + 1, total = p.wins + p.losses;
     return `<div class="player-item" onclick="selectPlayer('${p.id}')">
       <div class="rank-avatar">${initials(p.name)}</div>
-      <div class="rank-info"><div class="rank-name">${p.name}</div>
+      <div class="rank-info"><div class="rank-name">${displayName(p)} <span style="font-size:11px;color:var(--mid);font-weight:400">${p.name}</span></div>
       <div class="rank-sub">#${rank} · ${p.wins}W ${p.losses}V${!total ? ' · nog niet gespeeld' : ''}</div></div>
       <div class="rank-elo">${p.elo}</div>
     </div>`;
@@ -542,7 +556,7 @@ function render() {
           return `<div class="rank-item" onclick="selectPlayer('${p.id}')">
             <div class="rank-num ${nc}">${medal || pos}</div>
             <div class="rank-avatar">${initials(p.name)}</div>
-            <div class="rank-info"><div class="rank-name">${p.name}</div>
+            <div class="rank-info"><div class="rank-name">${displayName(p)}</div>
             <div class="rank-sub">${p.wins}W · ${p.losses}V · ${pct}%</div></div>
             <div class="rank-elo">${p.elo}</div>
           </div>`;
@@ -551,7 +565,7 @@ function render() {
 
   } else if (state.view === 'wedstrijd') {
     const opts = [...state.players].sort((a, b) => a.name.localeCompare(b.name))
-      .map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      .map(p => `<option value="${p.id}">${displayName(p)} — ${p.name}</option>`).join('');
     c.innerHTML = `
       <div class="section-label">Nieuwe wedstrijd invoeren</div>
       <div class="section-card">
@@ -575,7 +589,7 @@ function render() {
           const l = state.players.find(p => p.id === m.loserId);
           const ds = new Date(m.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
           return `<div class="match-item">
-            <div><div class="match-names"><strong>${w?.name || '?'}</strong> vs ${l?.name || '?'}</div>
+            <div><div class="match-names"><strong>${w ? displayName(w) : '?'}</strong> vs ${l ? displayName(l) : '?'}</div>
             <div class="match-date">${ds} &nbsp;·&nbsp; <span style="color:var(--orange);font-weight:600">+${m.delta} ELO</span></div></div>
             <span class="badge badge-win">Gewon.</span>
           </div>`;
@@ -594,7 +608,8 @@ function render() {
         </button>
         <div class="section-card" style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
           <div style="width:48px;height:48px;border-radius:50%;background:var(--orange-l);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--orange-d);flex-shrink:0">${initials(p.name)}</div>
-          <div style="flex:1"><div style="font-size:16px;font-weight:600;color:var(--navy)">${p.name}</div>
+          <div style="flex:1"><div style="font-size:16px;font-weight:600;color:var(--navy)">${displayName(p)}</div>
+          <div style="font-size:12px;color:var(--mid)">${p.name}</div>
           <div style="font-size:12px;color:var(--mid);margin-top:2px">Rang #${rank} van ${state.players.length}</div></div>
           <button class="danger-btn" onclick="removePlayer('${p.id}')">Verwijder</button>
         </div>
@@ -613,7 +628,7 @@ function render() {
           const opp = state.players.find(x => x.id === (won ? m.loserId : m.winnerId));
           const d = new Date(m.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
           return `<div class="match-item">
-            <div><div class="match-names">vs ${opp?.name || 'onbekend'}</div>
+            <div><div class="match-names">vs ${opp ? displayName(opp) : 'onbekend'}</div>
             <div class="match-date">${d} &nbsp;·&nbsp; ${won ? '+' : '−'}${m.delta} ELO</div></div>
             <span class="badge ${won ? 'badge-win' : 'badge-loss'}">${won ? 'Gewon.' : 'Verlor.'}</span>
           </div>`;
@@ -635,7 +650,7 @@ function render() {
             const rank = sorted.findIndex(x => x.id === p.id) + 1, total = p.wins + p.losses;
             return `<div class="player-item" onclick="selectPlayer('${p.id}')">
               <div class="rank-avatar">${initials(p.name)}</div>
-              <div class="rank-info"><div class="rank-name">${p.name}</div>
+              <div class="rank-info"><div class="rank-name">${displayName(p)} <span style="font-size:11px;color:var(--mid);font-weight:400">${p.name}</span></div>
               <div class="rank-sub">#${rank} · ${p.wins}W ${p.losses}V${!total ? ' · nog niet gespeeld' : ''}</div></div>
               <div class="rank-elo">${p.elo}</div>
             </div>`;
