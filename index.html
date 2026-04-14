@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1c2f4a">
 <title>dpi Pool Klassement</title>
 
 <!-- ============================================================
-  STAP 1: Vul hieronder jouw Supabase URL en anon key in.
-  Je vindt deze in je Supabase project onder:
-  Settings → API → Project URL & anon/public key
+  Vul hieronder je Supabase gegevens in.
+  Te vinden via: Supabase → Settings → API
 ============================================================ -->
 <script>
   const SUPABASE_URL = 'https://zbjnuntzsfakawrsahkl.supabase.co';
@@ -18,663 +20,594 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f3ef;
-}
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-:root {
-  --navy: #1c2f4a;
-  --orange: #e8681e;
-  --orange-l: #fbe8da;
-  --orange-d: #c0521a;
-  --green: #28a745;
-  --green-d: #1e7d33;
-  --cream: #f5f3ef;
-  --mid: #8a9bb0;
-  --border: #e0dbd2;
-  --radius: 10px;
-}
+html,body{height:100%;margin:0;padding:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f3ef}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--n:#1c2f4a;--o:#e8681e;--ol:#fbe8da;--od:#c0521a;--g:#28a745;--gd:#1e7d33;--gl:#e8f5eb;--c:#f5f3ef;--m:#8a9bb0;--b:#e0dbd2;--r:10px}
+#app{display:flex;flex-direction:column;width:100%;height:100vh;background:var(--c);overflow:hidden}
 
-#app {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100vh;
-  background: var(--cream);
-  overflow: hidden;
-}
-
-/* TOPBAR */
-.topbar {
-  padding: 0 16px;
-  height: 52px;
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--navy);
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.topbar::before {
-  content: '';
-  position: absolute;
-  right: -20px; top: -20px;
-  width: 110px; height: 110px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 93,27 93,73 50,95 7,73 7,27' fill='none' stroke='%23fff' stroke-width='1.5' opacity='0.08'/%3E%3Cpolygon points='50,18 80,34 80,66 50,82 20,66 20,34' fill='none' stroke='%23fff' stroke-width='1' opacity='0.05'/%3E%3C/svg%3E") center/cover;
-  pointer-events: none;
-}
-.topbar h1 { font-size: 15px; font-weight: 500; color: white; flex: 1; letter-spacing: .02em; margin: 0; }
-.topbar-count { font-size: 11px; color: var(--mid); flex-shrink: 0; }
-.eightball { width: 30px; height: 30px; flex-shrink: 0; }
-
-/* LOADING OVERLAY */
-#loading-overlay {
-  position: fixed; inset: 0;
-  background: var(--navy);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  z-index: 999; gap: 16px;
-}
-#loading-overlay p { color: white; font-size: 14px; opacity: .7; margin: 0; }
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid rgba(255,255,255,.2);
-  border-top-color: var(--orange);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--n);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
+#loading p{color:white;font-size:14px;opacity:.7;margin:0}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--o);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* CONFIG NOTICE */
-#config-notice {
-  display: none;
-  position: fixed; inset: 0;
-  background: var(--navy);
-  align-items: center; justify-content: center;
-  z-index: 998; padding: 24px;
-}
-#config-notice .box {
-  background: white; border-radius: 12px; padding: 24px; max-width: 360px; text-align: center;
-}
-#config-notice h2 { color: var(--navy); font-size: 18px; margin: 0 0 12px; }
-#config-notice p { color: var(--mid); font-size: 14px; line-height: 1.6; margin: 0 0 8px; }
-#config-notice code { background: var(--cream); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--orange-d); }
+#cfg{display:none;position:fixed;inset:0;background:var(--n);align-items:center;justify-content:center;z-index:998;padding:24px}
+#cfg .box{background:white;border-radius:12px;padding:24px;max-width:360px;text-align:center}
+#cfg h2{color:var(--n);font-size:18px;margin:0 0 12px}
+#cfg p{color:var(--m);font-size:14px;line-height:1.6;margin:0 0 8px}
+#cfg code{background:var(--c);padding:2px 6px;border-radius:4px;font-size:13px;color:var(--od)}
+
+/* TOPBAR */
+.top{padding:0 14px;height:52px;min-height:52px;display:flex;align-items:center;gap:10px;background:var(--n);flex-shrink:0;position:relative;overflow:hidden}
+.top::before{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,5 93,27 93,73 50,95 7,73 7,27' fill='none' stroke='%23fff' stroke-width='1.5' opacity='0.08'/%3E%3C/svg%3E") center/cover;pointer-events:none}
+.top h1{font-size:15px;font-weight:500;color:white;flex:1}
 
 /* CONTENT */
-.content { flex: 1; overflow-y: auto; padding: 12px 14px 6px; min-height: 0; }
+.cnt{flex:1;overflow-y:auto;padding:12px 14px 6px;min-height:0}
 
 /* NAV */
-.nav-wrap { background: white; border-top: 1px solid var(--border); flex-shrink: 0; }
-.nav { display: flex; align-items: flex-end; height: 62px; padding: 0 8px; }
-.nav-btn {
-  flex: 1; padding: 8px 4px 8px; border: none; background: none; cursor: pointer;
-  font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  font-family: inherit; transition: color .15s; letter-spacing: .02em;
-  font-weight: 600; color: var(--mid); text-transform: uppercase;
-}
-.nav-btn.active { color: var(--orange); }
-.nav-btn svg { width: 20px; height: 20px; stroke-width: 2; }
-.nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--orange); opacity: 0; transition: opacity .2s; margin-top: 1px; }
-.nav-btn.active .nav-dot { opacity: 1; }
-.nav-center { display: flex; flex-direction: column; align-items: center; flex: 0 0 80px; }
-.fab {
-  width: 60px; height: 60px; border-radius: 50%; background: var(--green);
-  border: 4px solid white; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 2px 12px rgba(40,167,69,.35);
-  transition: transform .15s, background .15s;
-  margin-bottom: 4px; position: relative; top: -16px;
-}
-.fab:hover { background: var(--green-d); transform: scale(1.06); }
-.fab:active { transform: scale(.96); }
-.fab svg { width: 26px; height: 26px; stroke: white; stroke-width: 2.5; fill: none; }
-.fab-label { font-size: 10px; font-weight: 600; color: var(--green-d); letter-spacing: .04em; text-transform: uppercase; margin-top: -12px; }
+.nav{background:white;border-top:1px solid var(--b);flex-shrink:0;display:flex;align-items:flex-end;height:62px;padding:0 2px}
+.nb{flex:1;padding:7px 2px 8px;border:none;background:none;cursor:pointer;font-size:9px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-weight:600;color:var(--m);text-transform:uppercase;letter-spacing:.03em}
+.nb.a{color:var(--o)}.nb svg{width:18px;height:18px;stroke-width:2}
+.nd{width:3px;height:3px;border-radius:50%;background:var(--o);opacity:0}.nb.a .nd{opacity:1}
+.nc{display:flex;flex-direction:column;align-items:center;flex:0 0 70px}
+.fab{width:56px;height:56px;border-radius:50%;background:var(--g);border:4px solid white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 12px rgba(40,167,69,.35);transition:transform .15s,background .15s;margin-bottom:3px;position:relative;top:-14px}
+.fab:hover{background:var(--gd);transform:scale(1.06)}.fab:active{transform:scale(.96)}
+.fab svg{width:24px;height:24px;stroke:white;stroke-width:2.5;fill:none}
+.fl{font-size:9px;font-weight:600;color:var(--gd);letter-spacing:.04em;text-transform:uppercase;margin-top:-10px}
 
-/* FORMS */
-select {
-  width: 100%; padding: 10px 12px; border-radius: var(--radius);
-  border: 1.5px solid var(--border); background: white;
-  color: var(--navy); font-size: 14px; font-family: inherit;
-  transition: border-color .15s, background .15s;
-}
-select.has-value { border-color: var(--orange); background: var(--orange-l); font-weight: 500; }
-select:focus { outline: none; border-color: var(--orange); }
-input[type=text], input[type=search] {
-  width: 100%; padding: 9px 10px; border-radius: var(--radius);
-  border: 1.5px solid var(--border); background: white;
-  color: var(--navy); font-size: 14px; font-family: inherit;
-  transition: border-color .15s;
-}
-input[type=text]:focus, input[type=search]:focus { outline: none; border-color: var(--orange); }
-input[type=search] { margin-bottom: 8px; }
+/* PLAYER PICKER */
+.pp{display:flex;align-items:center;padding:10px 12px;border-radius:var(--r);border:1.5px solid var(--b);background:white;cursor:pointer;min-height:42px;transition:border-color .15s}
+.pp.f{border-color:var(--o);background:var(--ol)}
 
-.winner-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.winner-btn {
-  flex: 1; padding: 11px 6px; border-radius: var(--radius);
-  border: 1.5px solid var(--border); background: white;
-  cursor: pointer; font-size: 12px; color: var(--mid);
-  font-family: inherit; text-align: center; transition: all .15s;
-  line-height: 1.3; font-weight: 500;
-}
-.winner-btn.selected { background: var(--orange-l); border-color: var(--orange); color: var(--navy); font-weight: 600; }
-.primary-btn {
-  width: 100%; padding: 12px; border-radius: var(--radius); border: none;
-  background: var(--orange); color: white; font-size: 14px; font-weight: 600;
-  font-family: inherit; cursor: pointer; transition: background .15s;
-}
-.primary-btn:hover { background: var(--orange-d); }
-.primary-btn:disabled { opacity: .5; cursor: default; }
-.danger-btn {
-  padding: 7px 12px; border-radius: var(--radius); border: 1px solid #fce4e4;
-  background: #fef8f8; color: #b91c1c; font-size: 12px; font-family: inherit; cursor: pointer; font-weight: 500;
-}
+/* BUTTONS */
+.btn{width:100%;padding:12px;border-radius:var(--r);border:none;background:var(--o);color:white;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--od)}.btn:disabled{opacity:.4;cursor:default}
+.obtn{padding:9px 16px;border-radius:var(--r);border:1.5px solid var(--b);background:white;color:var(--n);font-size:13px;font-family:inherit;cursor:pointer;font-weight:500}
+.dbtn{padding:7px 12px;border-radius:var(--r);border:1px solid #fce4e4;background:#fef8f8;color:#b91c1c;font-size:12px;font-family:inherit;cursor:pointer}
 
-/* CARDS & LABELS */
-.section-label {
-  font-size: 10px; font-weight: 600; letter-spacing: .08em;
-  color: var(--navy); opacity: .55; margin-bottom: 8px; padding: 0 2px; text-transform: uppercase;
-}
-.section-card { background: white; border-radius: var(--radius); padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
-.player-select-wrap { margin-bottom: 12px; }
-.player-select-wrap label {
-  font-size: 10px; font-weight: 600; color: var(--navy); opacity: .65;
-  margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .06em;
-}
+/* WINNER BTNS */
+.wr{display:flex;gap:8px;margin-bottom:12px}
+.wb{flex:1;padding:11px 6px;border-radius:var(--r);border:1.5px solid var(--b);background:white;cursor:pointer;font-size:13px;color:var(--m);font-family:inherit;text-align:center;font-weight:500;transition:all .15s}
+.wb.s{background:var(--ol);border-color:var(--o);color:var(--n);font-weight:600}
+
+/* LABELS & CARDS */
+.lbl{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--n);opacity:.55;margin-bottom:8px;text-transform:uppercase}
+.plbl{font-size:10px;font-weight:600;color:var(--n);opacity:.6;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.card{background:white;border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--b)}
 
 /* RANK LIST */
-.rank-item {
-  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
-  border-radius: var(--radius); margin-bottom: 3px; cursor: pointer;
-  background: white; border: 1px solid transparent; transition: border-color .12s;
-}
-.rank-item:hover { border-color: var(--orange-l); }
-.rank-num { font-size: 12px; font-weight: 500; color: var(--mid); width: 22px; text-align: right; flex-shrink: 0; }
-.rank-num.top1 { color: #c9a227; font-size: 14px; }
-.rank-num.top2 { color: #888; font-size: 14px; }
-.rank-num.top3 { color: #a0522d; font-size: 14px; }
-.rank-avatar {
-  width: 32px; height: 32px; border-radius: 50%; display: flex;
-  align-items: center; justify-content: center; font-size: 11px; font-weight: 600;
-  flex-shrink: 0; background: var(--orange-l); color: var(--orange-d);
-}
-.rank-info { flex: 1; min-width: 0; }
-.rank-name { font-size: 13px; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
-.rank-sub { font-size: 11px; color: var(--mid); margin-top: 1px; }
-.rank-elo { font-size: 14px; font-weight: 600; color: var(--orange); flex-shrink: 0; }
+.ri{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);margin-bottom:3px;cursor:pointer;background:white;border:1px solid transparent;transition:border-color .12s}
+.ri:hover{border-color:var(--ol)}
+.rn{font-size:12px;font-weight:500;color:var(--m);width:22px;text-align:right;flex-shrink:0}
+.t1{color:#c9a227;font-size:14px}.t2{color:#888;font-size:14px}.t3{color:#a0522d;font-size:14px}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;background:var(--ol);color:var(--od)}
+.rii{flex:1;min-width:0}
+.rname{font-size:13px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.rsub{font-size:11px;color:var(--m);margin-top:1px}
+.elo{font-size:14px;font-weight:600;color:var(--o);flex-shrink:0}
 
-/* BADGES */
-.badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badge-win { background: #d8f3dc; color: #155724; }
-.badge-loss { background: #fce4e4; color: #7b1d1d; }
+/* BADGE */
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.bw{background:#d8f3dc;color:#155724}.bl{background:#fce4e4;color:#7b1d1d}
 
-/* PLAYER LIST */
-.player-item {
-  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
-  border-radius: var(--radius); cursor: pointer; background: white;
-  margin-bottom: 3px; border: 1px solid transparent; transition: border-color .12s;
-}
-.player-item:hover { border-color: var(--orange-l); }
-.detail-back {
-  display: flex; align-items: center; gap: 5px; color: var(--orange);
-  font-size: 13px; cursor: pointer; margin-bottom: 14px;
-  background: none; border: none; font-family: inherit; padding: 0; font-weight: 600;
-}
+/* MATCH ITEMS */
+.mi{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--b)}
+.mi:last-child{border-bottom:none}
+
+/* PLAYER ITEMS */
+.pi{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);cursor:pointer;background:white;margin-bottom:3px;border:1px solid transparent;transition:border-color .12s}
+.pi:hover{border-color:var(--ol)}
+
+/* UNDO BAR */
+.ub{display:flex;align-items:center;gap:8px;background:white;border:1px solid var(--b);border-radius:var(--r);padding:8px 10px;margin-bottom:10px}
+.ubtn{font-size:11px;color:var(--od);background:var(--ol);border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-family:inherit;font-weight:600}
+
+/* CONFIRM VIEW */
+.cw{display:flex;flex-direction:column;align-items:center;padding:20px 16px;text-align:center}
+.cc{display:flex;gap:8px;margin-bottom:20px;width:100%}
+.cx{flex:1;background:white;border-radius:var(--r);padding:10px;border:1px solid var(--b);text-align:center}
 
 /* STATS */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-.stat-box { background: white; border-radius: var(--radius); padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
-.stat-val { font-size: 20px; font-weight: 600; color: var(--navy); }
-.stat-lbl { font-size: 10px; color: var(--mid); margin-top: 2px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; }
+.sh{background:white;border-radius:var(--r);padding:12px;border:1px solid var(--b);margin-bottom:6px;display:flex;align-items:center;gap:12px}
+.si{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 
-/* MATCH LIST */
-.match-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
-.match-item:last-child { border-bottom: none; }
-.match-names { font-size: 12px; color: var(--navy); font-weight: 500; }
-.match-date { font-size: 10px; color: var(--mid); margin-top: 1px; }
+/* STAT GRID */
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.sb{background:white;border-radius:var(--r);padding:10px 8px;text-align:center;border:1px solid var(--b)}
 
 /* MISC */
-.empty { text-align: center; color: var(--mid); padding: 24px 16px; font-size: 13px; line-height: 1.6; }
-.reset-link { text-align: center; color: var(--mid); font-size: 11px; cursor: pointer; padding: 8px; display: block; }
-.add-row { display: flex; gap: 8px; }
-.add-row input { flex: 1; }
-#toast {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  background: var(--navy); color: white; padding: 8px 18px; border-radius: 20px;
-  font-size: 12px; pointer-events: none; opacity: 0; transition: opacity .25s;
-  white-space: nowrap; z-index: 100; font-weight: 500;
-}
+.back{display:flex;align-items:center;gap:5px;color:var(--o);font-size:13px;cursor:pointer;margin-bottom:14px;background:none;border:none;font-family:inherit;padding:0;font-weight:600}
+.empty{text-align:center;color:var(--m);padding:24px 16px;font-size:13px;line-height:1.6}
+.div{height:1px;background:var(--b);margin:10px 0}
+.ar{display:flex;gap:8px}.ar input{flex:1}
+.srch-hdr{background:var(--c);padding:12px 14px 8px;margin:-12px -14px 0;position:sticky;top:-12px;z-index:2}
+input[type=text],input[type=search]{width:100%;padding:9px 10px;border-radius:var(--r);border:1.5px solid var(--b);background:white;color:var(--n);font-size:14px;font-family:inherit;transition:border-color .15s}
+input:focus{outline:none;border-color:var(--o)}
+select{width:100%;padding:9px 10px;border-radius:var(--r);border:1.5px solid var(--b);background:white;color:var(--n);font-size:13px;font-family:inherit}
+select:focus{outline:none;border-color:var(--o)}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--n);color:white;padding:8px 18px;border-radius:20px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;z-index:100;font-weight:500}
 </style>
 </head>
 <body>
 
-<!-- Loading screen -->
-<div id="loading-overlay">
-  <div class="spinner"></div>
-  <p>Verbinden met database...</p>
-</div>
-
-<!-- Config notice (shown when keys not set) -->
-<div id="config-notice">
-  <div class="box">
-    <h2>⚙️ Configuratie vereist</h2>
-    <p>Open het HTML-bestand in een teksteditor en vul bovenaan je Supabase gegevens in:</p>
-    <p><code>SUPABASE_URL</code> en <code>SUPABASE_ANON_KEY</code></p>
-    <p style="margin-top:12px">Zie de README voor stapsgewijze instructies.</p>
-  </div>
-</div>
+<div id="loading"><div class="spin"></div><p>Verbinden met database...</p></div>
+<div id="cfg"><div class="box">
+  <h2>⚙️ Configuratie vereist</h2>
+  <p>Open <code>index.html</code> en vul bovenaan je Supabase gegevens in:</p>
+  <p><code>SUPABASE_URL</code> en <code>SUPABASE_ANON_KEY</code></p>
+</div></div>
 
 <div id="app" style="display:none">
-  <div class="topbar">
-    <svg class="eightball" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <div class="top">
+    <svg width="28" height="28" viewBox="0 0 40 40" style="flex-shrink:0">
       <circle cx="20" cy="20" r="19" fill="#111"/>
       <circle cx="20" cy="17" r="10" fill="white"/>
       <circle cx="20" cy="17" r="5" fill="#111"/>
       <text x="20" y="20.5" text-anchor="middle" font-size="7" font-weight="700" fill="white" font-family="sans-serif">8</text>
     </svg>
     <h1>dpi Pool Klassement</h1>
-    <span class="topbar-count" id="match-count"></span>
+    <span id="mc-count" style="font-size:11px;color:rgba(255,255,255,.5)"></span>
   </div>
-
-  <div class="content" id="main-content"></div>
-
-  <div class="nav-wrap">
-    <div class="nav">
-      <button class="nav-btn active" id="nav-klassement" onclick="switchView('klassement')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Klassement
-        <div class="nav-dot"></div>
-      </button>
-      <div class="nav-center">
-        <div class="fab" id="fab-btn" onclick="switchView('wedstrijd')">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        </div>
-        <span class="fab-label">Wedstrijd</span>
+  <div class="cnt" id="mc"></div>
+  <div class="nav">
+    <button class="nb a" id="nk" onclick="go('k')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Klassement<div class="nd"></div>
+    </button>
+    <div class="nc">
+      <div class="fab" id="fab" onclick="go('w')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
       </div>
-      <button class="nav-btn" id="nav-spelers" onclick="switchView('spelers')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Spelers
-        <div class="nav-dot"></div>
-      </button>
+      <span class="fl">Wedstrijd</span>
     </div>
+    <button class="nb" id="ns" onclick="go('s')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="12" width="4" height="10"/><rect x="9" y="6" width="4" height="16"/><rect x="16" y="2" width="4" height="20"/></svg>Stats<div class="nd"></div>
+    </button>
+    <button class="nb" id="np" onclick="go('p')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Spelers<div class="nd"></div>
+    </button>
   </div>
 </div>
 <div id="toast"></div>
 
 <script>
-// ─── Supabase init ───────────────────────────────────────────
+// ─── Config & init ────────────────────────────────────────────
 const { createClient } = supabase;
+const ELO0 = 1200, K = 32, PWD = 'Hetistijdvooreennieuwestart';
+const DEFAULT_NAMES = ["Anouk","Arjen","David","Dennis","Dorte","Elise","Femke","Ferry","Floortje","Fyodor","Gert Jan","Giovanni","Hans","Jacob","Jacques","Jasper d.","Jasper S.","Jelle","Jesse B.","Jesse v.","Jesse W.","Joram","Judith","Kirsten","Kitty","Koen","Laith","Laurens","Lizzy","Lotfy","Mara","Mark O.","Mark S.","Marvin","Max","Michel","Myrthe","Natasja","Nicholas","Niels d.","Niels H.","Ott","Pieter","Redginald","Roan","Robbert L.","Robbert v.","Roland","Rolf","Ruben","Ruurd","Sasha","Stan","Thijs","Ties","Tim","Tjalling","Tom","Veronique","Wesley","Wouter","Alexander","Allard","Dick","Douwe","Esmée","Ileen","John","Kees","Kelly","Nick","Nicole","Philine","Saar","Sander","Yashica","Rob"];
+
 let db = null;
+let S = { players:[], matches:[], view:'k', selP:null, step:'form', pend:null, p1:null, p2:null, wid:null, srch:null, sq:'', h1:'', h2:'' };
 
-function checkConfig() {
-  return SUPABASE_URL !== 'JOUW_SUPABASE_URL_HIER' && SUPABASE_ANON_KEY !== 'JOUW_SUPABASE_ANON_KEY_HIER';
-}
+// ─── Helpers ──────────────────────────────────────────────────
+const ini = n => (n||'').split(' ').filter(Boolean).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const sorted = () => [...S.players].sort((a,b)=>b.elo-a.elo);
+const active = () => sorted().filter(p=>p.wins+p.losses>0);
 
-// ─── State ───────────────────────────────────────────────────
-const INITIAL_ELO = 1200;
-const K = 32;
-const RESET_PWD = 'Hetistijdvooreennieuwestart';
-const DEFAULT_NAMES = ["Anouk Zijlstra","Arjen Krist","David Fuhri","Dennis Meegdes","Dorte Rotteveel","Elise Oostenbrink","Femke Kapteijn","Ferry Witting","Floortje Cieraad","Fyodor Onck","Gert Jan Borst","Giovanni van Raam","Hans Jorritsma","Jacob Polak","Jacques Stuart","Jasper de Wit","Jasper Sonneveld","Jelle Bruns","Jesse Brandt","Jesse van Zuijlen","Jesse Warnaar","Joram Withagen","Judith Ekamper","Kirsten Pieters","Kitty van Zanten","Koen van Oosterhout","Laith Alzaher","Laurens Schrijver","Lizzy van der Beek","Lotfy Aly","Mara Oldewelt","Mark Officier","Mark Stoffers","Marvin van Kanten","Max Wiercx","Michel Verwoolde","Myrthe van der Lugt","Natasja Ooms","Nicholas Been","Niels de Lange","Niels Helmer","Ott Croll","Pieter de Rooij","Redginald Mones","Roan Hamminga","Robbert Leemans","Robbert van Staveren","Roland Reen","Rolf de Boer","Ruben van Weesep","Ruurd IJpma","Sasha Leemans","Stan de Rover","Thijs Witteveen","Ties Keurentjes","Tim ten Berge","Tjalling Veldhuis","Tom Bollemeijer","Veronique va der Steen","Wesley Jongerius","Wouter Lindenbergh","Alexander vd Berg v S.","Allard Mark Ebbers","Dick Waterink","Douwe Eijssen","Esmée Schuzsler","Ileen van den Berg","John Visée","Kees van der Sar","Kelly Stor","Nick van den Berg","Nicole Schouwenaar","Philine Goldbohm","Saar Calame","Sander Zuyderwijk","Yashica Peperkamp","Rob Vos"];
-
-let state = { players: [], matches: [], view: 'klassement', selectedPlayer: null };
-
-// ─── Helpers ─────────────────────────────────────────────────
-function initials(n) {
-  return n.split(' ').filter(Boolean).slice(0, 2).map(w => w[0] || '').join('').toUpperCase();
-}
-function displayName(p) {
-  const parts = p.name.trim().split(/\s+/);
-  const first = parts[0];
-  const hasDupe = state.players.some(x => x.id !== p.id && x.name.trim().split(/\s+/)[0] === first);
-  if (hasDupe) {
-    const last = parts[parts.length - 1];
-    return first + ' ' + last[0] + '.';
-  }
-  return first;
-}
-function getSorted() {
-  return [...state.players].sort((a, b) => b.elo - a.elo);
-}
-function getActive() {
-  return getSorted().filter(p => p.wins + p.losses > 0);
-}
-function showToast(msg) {
+function toast(m) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.style.opacity = 1;
+  t.textContent = m; t.style.opacity = 1;
   setTimeout(() => t.style.opacity = 0, 2500);
 }
+
 function hideLoading() {
-  document.getElementById('loading-overlay').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
 }
 
-// ─── Supabase DB calls ───────────────────────────────────────
-async function loadFromDB() {
+// ─── Supabase DB ──────────────────────────────────────────────
+async function dbLoad() {
   const [{ data: players }, { data: matches }] = await Promise.all([
     db.from('players').select('*').order('elo', { ascending: false }),
-    db.from('matches').select('*').order('created_at', { ascending: false }).limit(100)
+    db.from('matches').select('*').order('created_at', { ascending: false }).limit(200)
   ]);
-  state.players = (players || []).map(p => ({
-    id: p.id, name: p.name, elo: p.elo, wins: p.wins, losses: p.losses
-  }));
-  state.matches = (matches || []).map(m => ({
-    id: m.id, winnerId: m.winner_id, loserId: m.loser_id, delta: m.delta, date: m.created_at
-  }));
+  S.players = (players || []).map(p => ({ id: p.id, name: p.name, elo: p.elo, wins: p.wins, losses: p.losses }));
+  S.matches = (matches || []).map(m => ({ id: m.id, wid: m.winner_id, lid: m.loser_id, d: m.delta, date: m.created_at }));
 }
 
-async function seedPlayers() {
-  // Only seed if no players exist
+async function dbSeed() {
   const { data } = await db.from('players').select('id').limit(1);
   if (data && data.length > 0) return;
-  const rows = DEFAULT_NAMES.map(name => ({ name, elo: INITIAL_ELO, wins: 0, losses: 0 }));
-  await db.from('players').insert(rows);
+  await db.from('players').insert(DEFAULT_NAMES.map(name => ({ name, elo: ELO0, wins: 0, losses: 0 })));
 }
 
-async function saveMatch(winnerId, loserId, newWinnerElo, newLoserElo, delta) {
-  // Update ELO scores
+async function dbSaveMatch(winnerId, loserId, winnerElo, loserElo, winnerWins, loserLosses, delta) {
   await Promise.all([
-    db.from('players').update({ elo: newWinnerElo, wins: db.raw ? undefined : undefined }).eq('id', winnerId),
-    db.from('players').update({ elo: newLoserElo }).eq('id', loserId)
+    db.from('players').update({ elo: winnerElo, wins: winnerWins }).eq('id', winnerId),
+    db.from('players').update({ elo: loserElo, losses: loserLosses }).eq('id', loserId),
+    db.from('matches').insert({ winner_id: winnerId, loser_id: loserId, delta })
   ]);
-  // Update wins/losses separately to be safe
-  const winner = state.players.find(p => p.id === winnerId);
-  const loser = state.players.find(p => p.id === loserId);
-  await Promise.all([
-    db.from('players').update({ elo: newWinnerElo, wins: winner.wins + 1 }).eq('id', winnerId),
-    db.from('players').update({ elo: newLoserElo, losses: loser.losses + 1 }).eq('id', loserId)
-  ]);
-  // Insert match record
-  await db.from('matches').insert({ winner_id: winnerId, loser_id: loserId, delta });
 }
 
-async function saveNewPlayer(name) {
-  const { data, error } = await db.from('players').insert({ name, elo: INITIAL_ELO, wins: 0, losses: 0 }).select().single();
+async function dbUndoMatch(matchId, winnerId, loserId, winnerElo, loserElo, winnerWins, loserLosses) {
+  await Promise.all([
+    db.from('matches').delete().eq('id', matchId),
+    db.from('players').update({ elo: winnerElo, wins: winnerWins }).eq('id', winnerId),
+    db.from('players').update({ elo: loserElo, losses: loserLosses }).eq('id', loserId)
+  ]);
+}
+
+async function dbAddPlayer(name) {
+  const { data, error } = await db.from('players').insert({ name, elo: ELO0, wins: 0, losses: 0 }).select().single();
   if (error) throw error;
   return data;
 }
 
-async function deletePlayer(id) {
+async function dbDeletePlayer(id) {
   await Promise.all([
     db.from('matches').delete().or(`winner_id.eq.${id},loser_id.eq.${id}`),
     db.from('players').delete().eq('id', id)
   ]);
 }
 
-async function resetAllData() {
-  await db.from('matches').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await db.from('players').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  const rows = DEFAULT_NAMES.map(name => ({ name, elo: INITIAL_ELO, wins: 0, losses: 0 }));
-  await db.from('players').insert(rows);
-}
-
-// ─── UI Actions ──────────────────────────────────────────────
-function switchView(v) {
-  state.view = v; state.selectedPlayer = null;
-  document.getElementById('nav-klassement').classList.toggle('active', v === 'klassement');
-  document.getElementById('nav-spelers').classList.toggle('active', v === 'spelers');
-  document.getElementById('fab-btn').style.background = v === 'wedstrijd' ? 'var(--green-d)' : 'var(--green)';
+// ─── Navigation ───────────────────────────────────────────────
+function go(v) {
+  S.srch = null; S.sq = ''; S.view = v; S.selP = null; S.step = 'form'; S.pend = null;
+  ['k','s','p'].forEach(x => { const e=document.getElementById('n'+x); if(e) e.classList.toggle('a', x===v); });
+  const f = document.getElementById('fab'); if(f) f.style.background = v==='w' ? 'var(--gd)' : 'var(--g)';
   render();
 }
-function selectPlayer(id) { state.selectedPlayer = id; render(); }
-function backFromPlayer() { state.selectedPlayer = null; render(); }
 
-function onSelectChange(elId) {
-  const el = document.getElementById(elId);
-  if (el) el.classList.toggle('has-value', !!el.value);
-  if (elId === 'sel-p1') {
-    const v = el?.value;
-    const p2 = document.getElementById('sel-p2');
-    if (p2) Array.from(p2.options).forEach(o => { o.disabled = o.value && o.value === v; });
-  }
-  updateWinnerButtons();
+// ─── Search overlay ───────────────────────────────────────────
+function openS(slot) {
+  S.srch = slot; S.sq = '';
+  document.getElementById('mc').innerHTML = bSrch();
+  setTimeout(() => { fillList(); const i=document.getElementById('si'); if(i) i.focus(); }, 30);
+}
+function closeS() { S.srch = null; S.sq = ''; render(); }
+function pick(id) {
+  if(S.srch==='p1') S.p1=id; else S.p2=id;
+  if(S.p1===S.p2) { if(S.srch==='p1') S.p2=null; else S.p1=null; }
+  S.wid=null; S.srch=null; S.sq=''; render();
+}
+function sFilter(q) { S.sq=q; fillList(); }
+function fillList() {
+  const oth=S.srch==='p1'?S.p2:S.p1, cur=S.srch==='p1'?S.p1:S.p2, q=S.sq.toLowerCase();
+  const lst = [...S.players].filter(p=>p.id!==oth).filter(p=>!q||p.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+  const el = document.getElementById('slist'); if(!el) return;
+  el.innerHTML = lst.map(p => `<div class="pi" onclick="pick('${p.id}')" ${p.id===cur?'style="border-color:var(--o);background:var(--ol)"':''}>
+    <div class="av">${ini(p.name)}</div><div class="rii"><div class="rname">${p.name}</div></div>
+    ${p.id===cur?'<span style="color:var(--o);font-size:18px">✓</span>':''}
+  </div>`).join('') || '<div class="empty">Geen resultaten</div>';
+}
+function clearP(s) { if(s==='p1') S.p1=null; else S.p2=null; S.wid=null; render(); }
+
+// ─── Match flow ───────────────────────────────────────────────
+function setW(id) { S.wid=id; render(); }
+
+function prep() {
+  const p1=S.players.find(p=>p.id===S.p1), p2=S.players.find(p=>p.id===S.p2);
+  if(!p1||!p2) { toast('Selecteer twee spelers'); return; }
+  if(!S.wid) { toast('Selecteer de winnaar'); return; }
+  const w=p1.id===S.wid?p1:p2, l=w===p1?p2:p1;
+  const d = Math.round(K*(1-1/(1+Math.pow(10,(l.elo-w.elo)/400))));
+  S.pend = { wid:w.id, lid:l.id, wn:w.name, ln:l.name, we:w.elo, le:l.elo, ww:w.wins, ll:l.losses, d };
+  S.step = 'confirm'; render();
 }
 
-function updateWinnerButtons() {
-  const p1id = document.getElementById('sel-p1')?.value;
-  const p2id = document.getElementById('sel-p2')?.value;
-  const wc = document.getElementById('winner-container');
-  if (!wc) return;
-  const p1 = state.players.find(p => p.id === p1id);
-  const p2 = state.players.find(p => p.id === p2id);
-  wc.innerHTML = p1 && p2 ? `
-    <div class="section-label">Wie heeft gewonnen?</div>
-    <div class="winner-row">
-      <button class="winner-btn" data-id="${p1.id}" onclick="winnerSelect('${p1.id}')">${p1.name}</button>
-      <button class="winner-btn" data-id="${p2.id}" onclick="winnerSelect('${p2.id}')">${p2.name}</button>
-    </div>` : `<div style="font-size:12px;color:var(--mid);padding:4px 0">Selecteer eerst twee spelers</div>`;
-}
-
-function winnerSelect(id) {
-  document.querySelectorAll('.winner-btn').forEach(b => b.classList.toggle('selected', b.dataset.id === id));
-}
-
-async function submitMatch() {
-  const p1id = document.getElementById('sel-p1')?.value;
-  const p2id = document.getElementById('sel-p2')?.value;
-  const winId = document.querySelector('.winner-btn.selected')?.dataset?.id;
-  if (!p1id || !p2id || !winId || p1id === p2id) { showToast('Selecteer twee spelers en een winnaar'); return; }
-  const loseId = winId === p1id ? p2id : p1id;
-  const winner = state.players.find(p => p.id === winId);
-  const loser = state.players.find(p => p.id === loseId);
-  const exp = 1 / (1 + Math.pow(10, (loser.elo - winner.elo) / 400));
-  const delta = Math.round(K * (1 - exp));
-  const newWinElo = winner.elo + delta;
-  const newLoseElo = Math.max(200, loser.elo - delta);
-
-  const btn = document.querySelector('.primary-btn');
-  if (btn) btn.disabled = true;
+async function ok() {
+  const m = S.pend;
+  const btn = document.querySelector('.btn[onclick="ok()"]');
+  if(btn) btn.disabled = true;
   try {
-    await saveMatch(winId, loseId, newWinElo, newLoseElo, delta);
-    await loadFromDB();
-    showToast('+' + delta + ' ELO voor ' + displayName(winner) + '!');
+    await dbSaveMatch(m.wid, m.lid, m.we+m.d, Math.max(200,m.le-m.d), m.ww+1, m.ll+1, m.d);
+    await dbLoad();
+    const name=m.wn, d=m.d;
+    S.step='form'; S.pend=null; S.p1=null; S.p2=null; S.wid=null;
+    toast(`+${d} ELO voor ${name}!`);
     render();
   } catch(e) {
-    showToast('Fout bij opslaan: ' + e.message);
-  } finally {
-    if (btn) btn.disabled = false;
+    toast('Fout: ' + e.message);
+    if(btn) btn.disabled = false;
   }
 }
 
-async function addPlayer() {
-  const inp = document.getElementById('new-player-name');
-  const name = inp?.value?.trim();
-  if (!name) { showToast('Vul een naam in'); return; }
-  if (state.players.find(p => p.name.toLowerCase() === name.toLowerCase())) { showToast('Speler bestaat al'); return; }
+function cancel() { S.step='form'; S.pend=null; render(); }
+
+// ─── Undo ─────────────────────────────────────────────────────
+async function undo() {
+  const last = S.matches[0]; if(!last) { toast('Geen wedstrijd om ongedaan te maken'); return; }
+  if(!confirm('Laatste wedstrijd ongedaan maken?')) return;
+  const w = S.players.find(p=>p.id===last.wid);
+  const l = S.players.find(p=>p.id===last.lid);
+  if(!w||!l) return;
   try {
-    const p = await saveNewPlayer(name);
-    state.players.push({ id: p.id, name: p.name, elo: p.elo, wins: p.wins, losses: p.losses });
-    showToast(name + ' toegevoegd!');
+    await dbUndoMatch(last.id, w.id, l.id, w.elo-last.d, l.elo+last.d, Math.max(0,w.wins-1), Math.max(0,l.losses-1));
+    await dbLoad();
+    toast('Wedstrijd ongedaan gemaakt');
     render();
-  } catch(e) { showToast('Fout: ' + e.message); }
+  } catch(e) { toast('Fout: ' + e.message); }
 }
 
-async function removePlayer(id) {
-  const p = state.players.find(x => x.id === id);
-  if (!p) return;
-  if (p.wins + p.losses > 0 && !confirm(displayName(p) + ' heeft al wedstrijden gespeeld. Toch verwijderen?')) return;
+// ─── Stats ────────────────────────────────────────────────────
+function streak(pid) {
+  const ms=[...S.matches].filter(m=>m.wid===pid||m.lid===pid).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let mx=0,c=0; ms.forEach(m=>{m.wid===pid?(c++,mx=Math.max(mx,c)):c=0;}); return mx;
+}
+function weekElo(pid) {
+  const w=Date.now()-7*24*60*60*1000;
+  return S.matches.filter(m=>new Date(m.date)>=w&&(m.wid===pid||m.lid===pid)).reduce((s,m)=>m.wid===pid?s+m.d:s-m.d,0);
+}
+function h2h(a,b) {
+  const ms=S.matches.filter(m=>(m.wid===a&&m.lid===b)||(m.wid===b&&m.lid===a));
+  return { t:ms.length, aw:ms.filter(m=>m.wid===a).length, bw:ms.filter(m=>m.wid===b).length, ms:ms.slice(0,5) };
+}
+
+// ─── Players ──────────────────────────────────────────────────
+function goP(id) { if(S.view==='k') S.view='p'; S.selP=id; render(); }
+
+async function addP() {
+  const i=document.getElementById('nn'), n=i?.value?.trim();
+  if(!n) { toast('Vul een naam in'); return; }
+  if(S.players.find(p=>p.name.toLowerCase()===n.toLowerCase())) { toast('Bestaat al'); return; }
   try {
-    await deletePlayer(id);
-    await loadFromDB();
-    state.selectedPlayer = null;
-    showToast(displayName(p) + ' verwijderd');
-    render();
-  } catch(e) { showToast('Fout: ' + e.message); }
+    const p = await dbAddPlayer(n);
+    S.players.push({ id:p.id, name:p.name, elo:p.elo, wins:p.wins, losses:p.losses });
+    i.value = '';
+    toast(n+' toegevoegd!'); render();
+  } catch(e) { toast('Fout: '+e.message); }
 }
 
-async function resetAll() {
-  const pwd = prompt('Voer het resetwachtwoord in:');
-  if (pwd === null) return;
-  if (pwd !== RESET_PWD) { showToast('Onjuist wachtwoord'); return; }
-  if (!confirm('Weet je het zeker? Alle data wordt gewist.')) return;
+async function delP(id) {
+  const p = S.players.find(x=>x.id===id); if(!p) return;
+  if(p.wins+p.losses>0 && !confirm(p.name+' verwijderen?')) return;
   try {
-    showToast('Bezig met resetten...');
-    await resetAllData();
-    await loadFromDB();
-    showToast('Data gereset');
-    render();
-  } catch(e) { showToast('Fout: ' + e.message); }
+    await dbDeletePlayer(id);
+    await dbLoad();
+    S.selP = null; toast(p.name+' verwijderd'); render();
+  } catch(e) { toast('Fout: '+e.message); }
 }
 
-function filterPlayers(q) {
-  q = q.toLowerCase();
-  const alpha = [...state.players].sort((a, b) => a.name.localeCompare(b.name));
-  const eloS = getSorted();
-  const list = document.getElementById('player-list');
-  if (!list) return;
-  const f = q ? alpha.filter(p => p.name.toLowerCase().includes(q) || displayName(p).toLowerCase().includes(q)) : alpha;
-  list.innerHTML = f.map(p => {
-    const rank = eloS.findIndex(x => x.id === p.id) + 1, total = p.wins + p.losses;
-    return `<div class="player-item" onclick="selectPlayer('${p.id}')">
-      <div class="rank-avatar">${initials(p.name)}</div>
-      <div class="rank-info"><div class="rank-name">${displayName(p)} <span style="font-size:11px;color:var(--mid);font-weight:400">${p.name}</span></div>
-      <div class="rank-sub">#${rank} · ${p.wins}W ${p.losses}V${!total ? ' · nog niet gespeeld' : ''}</div></div>
-      <div class="rank-elo">${p.elo}</div>
-    </div>`;
-  }).join('') || '<div class="empty">Geen spelers gevonden</div>';
+function filterP(q) {
+  const el=document.getElementById('plist'); if(!el) return;
+  const s=sorted(), a=[...S.players].sort((x,y)=>x.name.localeCompare(y.name));
+  const f = q ? a.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())) : a;
+  el.innerHTML = f.map(p=>{const r=s.findIndex(x=>x.id===p.id)+1,t=p.wins+p.losses;
+    return`<div class="pi" onclick="goP('${p.id}')"><div class="av">${ini(p.name)}</div>
+    <div class="rii"><div class="rname">${p.name}</div><div class="rsub">#${r} · ${p.wins}W ${p.losses}V${!t?' · inactief':''}</div></div>
+    <div class="elo">${p.elo}</div></div>`;}).join('') || '<div class="empty">Niet gevonden</div>';
 }
 
-// ─── Render ──────────────────────────────────────────────────
-function render() {
-  const sorted = getSorted(), active = getActive();
-  const mc = document.getElementById('match-count');
-  if (mc) mc.textContent = state.matches.length ? state.matches.length + '×' : '';
-  const c = document.getElementById('main-content');
+// ─── Build views ──────────────────────────────────────────────
+function bSrch() {
+  return `<div class="srch-hdr">
+    <button class="back" onclick="closeS()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Terug</button>
+    <div class="lbl">${S.srch==='p1'?'Kies speler 1':'Kies speler 2'}</div>
+    <input id="si" type="search" placeholder="Zoek op naam..." oninput="sFilter(this.value)" autocomplete="off">
+  </div><div id="slist" style="margin-top:8px"></div>`;
+}
 
-  if (state.view === 'klassement') {
-    c.innerHTML = `
-      <div class="section-label">${active.length} actieve spelers</div>
-      ${active.length === 0 ? '<div class="empty">Nog geen wedstrijden gespeeld.<br>Tik op de groene knop om te beginnen!</div>' :
-        active.map((p, i) => {
-          const pos = i + 1, nc = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
-          const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '';
-          const total = p.wins + p.losses, pct = total ? Math.round(p.wins / total * 100) : 0;
-          return `<div class="rank-item" onclick="selectPlayer('${p.id}')">
-            <div class="rank-num ${nc}">${medal || pos}</div>
-            <div class="rank-avatar">${initials(p.name)}</div>
-            <div class="rank-info"><div class="rank-name">${displayName(p)}</div>
-            <div class="rank-sub">${p.wins}W · ${p.losses}V · ${pct}%</div></div>
-            <div class="rank-elo">${p.elo}</div>
-          </div>`;
-        }).join('')}
-      <div style="padding:12px 0"><span class="reset-link" onclick="resetAll()">⚙ Alle data resetten</span></div>`;
+function bK() {
+  const act = active();
+  return `<div class="lbl">${act.length} actieve spelers</div>
+  ${!act.length ? '<div class="empty">Nog geen wedstrijden.<br>Tik op de groene knop!</div>' :
+    act.map((p,i) => { const pos=i+1, nc=pos===1?'t1':pos===2?'t2':pos===3?'t3':'';
+      const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
+      const tot=p.wins+p.losses, pct=tot?Math.round(p.wins/tot*100):0;
+      return `<div class="ri" onclick="goP('${p.id}')"><div class="rn ${nc}">${medal||pos}</div>
+      <div class="av">${ini(p.name)}</div><div class="rii"><div class="rname">${p.name}</div>
+      <div class="rsub">${p.wins}W · ${p.losses}V · ${pct}%</div></div><div class="elo">${p.elo}</div></div>`;
+    }).join('')}`;
+}
 
-  } else if (state.view === 'wedstrijd') {
-    const opts = [...state.players].sort((a, b) => a.name.localeCompare(b.name))
-      .map(p => `<option value="${p.id}">${displayName(p)} — ${p.name}</option>`).join('');
-    c.innerHTML = `
-      <div class="section-label">Nieuwe wedstrijd invoeren</div>
-      <div class="section-card">
-        <div class="player-select-wrap">
-          <label for="sel-p1">Speler 1</label>
-          <select id="sel-p1" onchange="onSelectChange('sel-p1')"><option value="">— kies speler —</option>${opts}</select>
-        </div>
-        <div class="player-select-wrap">
-          <label for="sel-p2">Speler 2</label>
-          <select id="sel-p2" onchange="onSelectChange('sel-p2')"><option value="">— kies speler —</option>${opts}</select>
-        </div>
-        <div id="winner-container" style="margin-bottom:12px">
-          <div style="font-size:12px;color:var(--mid);padding:4px 0">Selecteer eerst twee spelers</div>
-        </div>
-        <button class="primary-btn" onclick="submitMatch()">Wedstrijd opslaan</button>
+function bW() {
+  const p1=S.players.find(p=>p.id===S.p1), p2=S.players.find(p=>p.id===S.p2);
+  const lw=S.matches[0]?S.players.find(p=>p.id===S.matches[0].wid):null;
+  const ll=S.matches[0]?S.players.find(p=>p.id===S.matches[0].lid):null;
+  return `${lw&&ll?`<div class="ub"><div style="flex:1;font-size:12px;color:var(--m)">Laatste: <strong style="color:var(--n)">${lw.name}</strong> won van ${ll.name}</div>
+    <button class="ubtn" onclick="undo()">↩ Ongedaan</button></div>`:''}
+  <div class="lbl">Nieuwe wedstrijd</div>
+  <div class="card">
+    <div style="margin-bottom:12px">
+      <div class="plbl">Speler 1</div>
+      <div class="pp ${p1?'f':''}" onclick="openS('p1')">
+        ${p1?`<span style="flex:1;font-size:14px;color:var(--n);font-weight:500">${p1.name}</span>
+          <button onclick="event.stopPropagation();clearP('p1')" style="border:none;background:none;color:var(--od);cursor:pointer;font-size:18px;padding:0 0 0 8px">×</button>`
+        :`<span style="flex:1;font-size:14px;color:var(--m)">— kies speler —</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`}
       </div>
-      ${state.matches.length ? `
-        <div class="section-label">Recente wedstrijden</div>
-        ${state.matches.slice(0, 10).map(m => {
-          const w = state.players.find(p => p.id === m.winnerId);
-          const l = state.players.find(p => p.id === m.loserId);
-          const ds = new Date(m.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-          return `<div class="match-item">
-            <div><div class="match-names"><strong>${w ? displayName(w) : '?'}</strong> vs ${l ? displayName(l) : '?'}</div>
-            <div class="match-date">${ds} &nbsp;·&nbsp; <span style="color:var(--orange);font-weight:600">+${m.delta} ELO</span></div></div>
-            <span class="badge badge-win">Gewon.</span>
-          </div>`;
-        }).join('')}` : ''}`;
-
-  } else if (state.view === 'spelers') {
-    if (state.selectedPlayer) {
-      const p = state.players.find(x => x.id === state.selectedPlayer);
-      if (!p) { state.selectedPlayer = null; render(); return; }
-      const rank = sorted.findIndex(x => x.id === p.id) + 1;
-      const total = p.wins + p.losses, pct = total ? Math.round(p.wins / total * 100) : 0;
-      const pm = state.matches.filter(m => m.winnerId === p.id || m.loserId === p.id).slice(0, 10);
-      c.innerHTML = `
-        <button class="detail-back" onclick="backFromPlayer()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Terug
-        </button>
-        <div class="section-card" style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-          <div style="width:48px;height:48px;border-radius:50%;background:var(--orange-l);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--orange-d);flex-shrink:0">${initials(p.name)}</div>
-          <div style="flex:1"><div style="font-size:16px;font-weight:600;color:var(--navy)">${displayName(p)}</div>
-          <div style="font-size:12px;color:var(--mid)">${p.name}</div>
-          <div style="font-size:12px;color:var(--mid);margin-top:2px">Rang #${rank} van ${state.players.length}</div></div>
-          <button class="danger-btn" onclick="removePlayer('${p.id}')">Verwijder</button>
-        </div>
-        <div class="stat-grid">
-          <div class="stat-box"><div class="stat-val" style="color:var(--orange)">${p.elo}</div><div class="stat-lbl">ELO</div></div>
-          <div class="stat-box"><div class="stat-val">${p.wins}</div><div class="stat-lbl">Gewon.</div></div>
-          <div class="stat-box"><div class="stat-val">${p.losses}</div><div class="stat-lbl">Verloren</div></div>
-        </div>
-        <div class="stat-grid" style="grid-template-columns:1fr 1fr">
-          <div class="stat-box"><div class="stat-val">${total}</div><div class="stat-lbl">Gespeeld</div></div>
-          <div class="stat-box"><div class="stat-val">${pct}%</div><div class="stat-lbl">Winratio</div></div>
-        </div>
-        <div class="section-label" style="margin-top:4px">Wedstrijdhistorie</div>
-        ${pm.length ? pm.map(m => {
-          const won = m.winnerId === p.id;
-          const opp = state.players.find(x => x.id === (won ? m.loserId : m.winnerId));
-          const d = new Date(m.date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
-          return `<div class="match-item">
-            <div><div class="match-names">vs ${opp ? displayName(opp) : 'onbekend'}</div>
-            <div class="match-date">${d} &nbsp;·&nbsp; ${won ? '+' : '−'}${m.delta} ELO</div></div>
-            <span class="badge ${won ? 'badge-win' : 'badge-loss'}">${won ? 'Gewon.' : 'Verlor.'}</span>
-          </div>`;
-        }).join('') : '<div class="empty">Nog geen wedstrijden gespeeld</div>'}`;
-    } else {
-      const alpha = [...state.players].sort((a, b) => a.name.localeCompare(b.name));
-      c.innerHTML = `
-        <div class="section-label">Spelersbeheer · ${state.players.length} spelers</div>
-        <div class="section-card" style="margin-bottom:10px">
-          <div class="section-label">Nieuwe speler</div>
-          <div class="add-row">
-            <input type="text" id="new-player-name" placeholder="Voor- en achternaam" onkeydown="if(event.key==='Enter')addPlayer()"/>
-            <button class="primary-btn" style="width:auto;padding:9px 14px;flex-shrink:0" onclick="addPlayer()">+ Voeg toe</button>
-          </div>
-        </div>
-        <input type="search" placeholder="Zoek speler..." class="search-input" oninput="filterPlayers(this.value)"/>
-        <div id="player-list">
-          ${alpha.map(p => {
-            const rank = sorted.findIndex(x => x.id === p.id) + 1, total = p.wins + p.losses;
-            return `<div class="player-item" onclick="selectPlayer('${p.id}')">
-              <div class="rank-avatar">${initials(p.name)}</div>
-              <div class="rank-info"><div class="rank-name">${displayName(p)} <span style="font-size:11px;color:var(--mid);font-weight:400">${p.name}</span></div>
-              <div class="rank-sub">#${rank} · ${p.wins}W ${p.losses}V${!total ? ' · nog niet gespeeld' : ''}</div></div>
-              <div class="rank-elo">${p.elo}</div>
-            </div>`;
-          }).join('')}
-        </div>`;
-    }
-  }
+    </div>
+    <div style="margin-bottom:12px">
+      <div class="plbl">Speler 2</div>
+      <div class="pp ${p2?'f':''}" onclick="openS('p2')">
+        ${p2?`<span style="flex:1;font-size:14px;color:var(--n);font-weight:500">${p2.name}</span>
+          <button onclick="event.stopPropagation();clearP('p2')" style="border:none;background:none;color:var(--od);cursor:pointer;font-size:18px;padding:0 0 0 8px">×</button>`
+        :`<span style="flex:1;font-size:14px;color:var(--m)">— kies speler —</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`}
+      </div>
+    </div>
+    ${p1&&p2?`<div class="lbl">Wie heeft gewonnen?</div>
+      <div class="wr">
+        <button class="wb ${S.wid===p1.id?'s':''}" onclick="setW('${p1.id}')">${p1.name}</button>
+        <button class="wb ${S.wid===p2.id?'s':''}" onclick="setW('${p2.id}')">${p2.name}</button>
+      </div>`:'<div style="font-size:12px;color:var(--m);margin-bottom:12px">Selecteer eerst twee spelers</div>'}
+    <button class="btn" onclick="prep()" ${!p1||!p2||!S.wid?'disabled':''}>Doorgaan →</button>
+  </div>
+  ${S.matches.slice(0,6).length?`<div class="lbl">Recente wedstrijden</div>
+    ${S.matches.slice(0,6).map(m=>{const w=S.players.find(p=>p.id===m.wid),l=S.players.find(p=>p.id===m.lid);
+      const ds=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      return`<div class="mi"><div><div style="font-size:12px;color:var(--n);font-weight:500"><strong>${w?.name||'?'}</strong> vs ${l?.name||'?'}</div>
+      <div style="font-size:10px;color:var(--m);margin-top:1px">${ds} · <span style="color:var(--o);font-weight:600">+${m.d} ELO</span></div></div>
+      <span class="badge bw">Gewon.</span></div>`;}).join('')}`:''}`;
 }
 
-// ─── Boot ────────────────────────────────────────────────────
+function bConf() {
+  const m=S.pend, nwe=m.we+m.d, nle=Math.max(200,m.le-m.d);
+  return `<div class="cw">
+    <svg width="64" height="64" viewBox="0 0 64 64" style="margin-bottom:16px">
+      <circle cx="32" cy="32" r="30" fill="#111"/><circle cx="32" cy="26" r="16" fill="white"/>
+      <circle cx="32" cy="26" r="8" fill="#111"/>
+      <text x="32" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">8</text>
+    </svg>
+    <div style="font-size:22px;font-weight:700;color:var(--n);margin-bottom:4px">${m.wn} wint!</div>
+    <div style="font-size:14px;color:var(--m);margin-bottom:16px">van ${m.ln}</div>
+    <div class="cc">
+      <div class="cx">
+        <div class="av" style="background:var(--gl);color:var(--gd);margin:0 auto 6px">${ini(m.wn)}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--n);margin-bottom:4px">${m.wn}</div>
+        <div style="font-size:11px;color:var(--m)">${m.we} → <strong style="color:var(--gd)">${nwe}</strong></div>
+        <div style="font-size:11px;color:var(--gd);font-weight:700;margin-top:3px">+${m.d} ELO</div>
+      </div>
+      <div class="cx">
+        <div class="av" style="background:var(--c);color:var(--m);margin:0 auto 6px">${ini(m.ln)}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--n);margin-bottom:4px">${m.ln}</div>
+        <div style="font-size:11px;color:var(--m)">${m.le} → <strong style="color:#b91c1c">${nle}</strong></div>
+        <div style="font-size:11px;color:#b91c1c;font-weight:700;margin-top:3px">-${m.d} ELO</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;width:100%">
+      <button class="obtn" onclick="cancel()" style="flex:1">Annuleer</button>
+      <button class="btn" onclick="ok()" style="flex:2">Bevestig ✓</button>
+    </div>
+  </div>`;
+}
+
+function bS() {
+  const act = active();
+  if(!act.length) return '<div class="empty">Nog geen wedstrijden gespeeld.</div>';
+  const top = act.reduce((a,b)=>(a.wins+a.losses)>(b.wins+b.losses)?a:b);
+  const topStr = act.map(p=>({p,s:streak(p.id)})).sort((a,b)=>b.s-a.s)[0];
+  const movers = act.map(p=>({p,c:weekElo(p.id)})).filter(x=>x.c!==0).sort((a,b)=>b.c-a.c);
+  const topUp=movers[0], topDn=movers[movers.length-1];
+  const sp = [...S.players].sort((a,b)=>a.name.localeCompare(b.name));
+  const p1=S.h1?S.players.find(p=>p.id===S.h1):null;
+  const p2=S.h2?S.players.find(p=>p.id===S.h2):null;
+  const hh=p1&&p2?h2h(p1.id,p2.id):null;
+  return `<div class="lbl">Hoogtepunten</div>
+  ${topStr?.s>0?`<div class="sh"><div class="si" style="background:#fff8e1">🔥</div>
+    <div><div style="font-size:10px;color:var(--m);font-weight:600;text-transform:uppercase">Langste winserie ooit</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n)">${topStr.p.name}</div>
+    <div style="font-size:11px;color:var(--m)">${topStr.s} op rij gewonnen</div></div></div>`:''}
+  <div class="sh"><div class="si" style="background:var(--ol)">🎱</div>
+    <div><div style="font-size:10px;color:var(--m);font-weight:600;text-transform:uppercase">Meest actief</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n)">${top.name}</div>
+    <div style="font-size:11px;color:var(--m)">${top.wins+top.losses} wedstrijden gespeeld</div></div></div>
+  ${topUp?.c>0?`<div class="sh"><div class="si" style="background:var(--gl)">📈</div>
+    <div><div style="font-size:10px;color:var(--m);font-weight:600;text-transform:uppercase">Stijger van de week</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n)">${topUp.p.name}</div>
+    <div style="font-size:11px;color:var(--m)">+${topUp.c} ELO in 7 dagen</div></div></div>`:''}
+  ${topDn?.c<0?`<div class="sh"><div class="si" style="background:#fce4e4">📉</div>
+    <div><div style="font-size:10px;color:var(--m);font-weight:600;text-transform:uppercase">Daler van de week</div>
+    <div style="font-size:15px;font-weight:600;color:var(--n)">${topDn.p.name}</div>
+    <div style="font-size:11px;color:var(--m)">${topDn.c} ELO in 7 dagen</div></div></div>`:''}
+  <div class="div"></div>
+  <div class="lbl">Head-to-head</div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><div class="plbl">Speler 1</div>
+        <select onchange="S.h1=this.value;render()">
+          <option value="">— kies —</option>
+          ${sp.map(p=>`<option value="${p.id}" ${S.h1===p.id?'selected':''}>${p.name}</option>`).join('')}
+        </select></div>
+      <div><div class="plbl">Speler 2</div>
+        <select onchange="S.h2=this.value;render()">
+          <option value="">— kies —</option>
+          ${sp.filter(p=>p.id!==S.h1).map(p=>`<option value="${p.id}" ${S.h2===p.id?'selected':''}>${p.name}</option>`).join('')}
+        </select></div>
+    </div>
+    ${hh&&hh.t>0?`
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600;color:var(--o);flex-shrink:0">${p1.name}</span>
+        <div style="flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--b);display:flex">
+          <div style="width:${Math.round(hh.aw/hh.t*100)}%;background:var(--o)"></div>
+          <div style="width:${Math.round(hh.bw/hh.t*100)}%;background:var(--n)"></div>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:var(--n);flex-shrink:0">${p2.name}</span>
+      </div>
+      <div style="text-align:center;font-size:28px;font-weight:700;color:var(--n)">${hh.aw} – ${hh.bw}</div>
+      <div style="text-align:center;font-size:11px;color:var(--m);margin-bottom:8px">${hh.t} wedstrijd${hh.t!==1?'en':''}</div>
+      ${hh.ms.map(m=>{const won=m.wid===p1.id,d=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+        return`<div class="mi"><div><div style="font-size:12px;color:var(--n);font-weight:500">${won?p1.name:p2.name} won</div>
+        <div style="font-size:10px;color:var(--m)">${d}</div></div>
+        <span class="badge ${won?'bw':'bl'}">${won?p1.name:p2.name}</span></div>`;}).join('')}`
+    :hh?'<div style="font-size:13px;color:var(--m);text-align:center;padding:8px">Nog nooit tegen elkaar gespeeld</div>'
+    :'<div style="font-size:12px;color:var(--m);text-align:center;padding:8px">Selecteer twee spelers</div>'}
+  </div>`;
+}
+
+function bP() {
+  if(S.selP) {
+    const p=S.players.find(x=>x.id===S.selP); if(!p){S.selP=null;return bP();}
+    const r=sorted().findIndex(x=>x.id===p.id)+1, tot=p.wins+p.losses, pct=tot?Math.round(p.wins/tot*100):0;
+    const pm=S.matches.filter(m=>m.wid===p.id||m.lid===p.id).slice(0,10), str=streak(p.id);
+    return `<button class="back" onclick="S.selP=null;render()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Terug</button>
+    <div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--ol);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--od);flex-shrink:0">${ini(p.name)}</div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:600;color:var(--n)">${p.name}</div>
+      <div style="font-size:12px;color:var(--m);margin-top:2px">Rang #${r} van ${S.players.length}</div></div>
+      <button class="dbtn" onclick="delP('${p.id}')">Verwijder</button>
+    </div>
+    <div class="sg">
+      <div class="sb"><div style="font-size:20px;font-weight:600;color:var(--o)">${p.elo}</div><div style="font-size:10px;color:var(--m);margin-top:2px;text-transform:uppercase">ELO</div></div>
+      <div class="sb"><div style="font-size:20px;font-weight:600;color:var(--n)">${p.wins}</div><div style="font-size:10px;color:var(--m);margin-top:2px;text-transform:uppercase">Gewon.</div></div>
+      <div class="sb"><div style="font-size:20px;font-weight:600;color:var(--n)">${p.losses}</div><div style="font-size:10px;color:var(--m);margin-top:2px;text-transform:uppercase">Verloren</div></div>
+    </div>
+    <div class="sg">
+      <div class="sb"><div style="font-size:20px;font-weight:600;color:var(--n)">${tot}</div><div style="font-size:10px;color:var(--m);margin-top:2px;text-transform:uppercase">Gespeeld</div></div>
+      <div class="sb"><div style="font-size:20px;font-weight:600;color:var(--n)">${pct}%</div><div style="font-size:10px;color:var(--m);margin-top:2px;text-transform:uppercase">Winratio</div></div>
+      <div class="sb"><div style="font-size:20px;font-weight:600;color:var(--n)">${str}</div><div style="font-size:10px;color:var(--m);margin-top:2px;text-transform:uppercase">Beste serie</div></div>
+    </div>
+    <div class="lbl" style="margin-top:4px">Wedstrijdhistorie</div>
+    ${pm.length?pm.map(m=>{const won=m.wid===p.id,opp=S.players.find(x=>x.id===(won?m.lid:m.wid));
+      const d=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+      return`<div class="mi"><div><div style="font-size:12px;color:var(--n);font-weight:500">vs ${opp?.name||'?'}</div>
+      <div style="font-size:10px;color:var(--m);margin-top:1px">${d} · ${won?'+':'-'}${m.d} ELO</div></div>
+      <span class="badge ${won?'bw':'bl'}">${won?'Gewon.':'Verlor.'}</span></div>`;}).join('')
+    :'<div class="empty">Nog geen wedstrijden</div>'}`;
+  }
+  const s=sorted(), a=[...S.players].sort((x,y)=>x.name.localeCompare(y.name));
+  return `<div class="lbl">Spelersbeheer · ${S.players.length} spelers</div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lbl">Nieuwe speler</div>
+    <div class="ar">
+      <input type="text" id="nn" placeholder="Voornaam (+ initiaal indien nodig)" onkeydown="if(event.key==='Enter')addP()">
+      <button class="btn" style="width:auto;padding:9px 14px;flex-shrink:0" onclick="addP()">+</button>
+    </div>
+  </div>
+  <input type="search" placeholder="Zoek speler..." style="margin-bottom:8px" oninput="filterP(this.value)">
+  <div id="plist">
+    ${a.map(p=>{const r=s.findIndex(x=>x.id===p.id)+1,t=p.wins+p.losses;
+      return`<div class="pi" onclick="goP('${p.id}')"><div class="av">${ini(p.name)}</div>
+      <div class="rii"><div class="rname">${p.name}</div><div class="rsub">#${r} · ${p.wins}W ${p.losses}V${!t?' · inactief':''}</div></div>
+      <div class="elo">${p.elo}</div></div>`;}).join('')}
+  </div>`;
+}
+
+// ─── Render ───────────────────────────────────────────────────
+function render() {
+  const cnt=document.getElementById('mc-count');
+  if(cnt) cnt.textContent = S.matches.length ? S.matches.length+'×' : '';
+  const f=document.getElementById('fab'); if(f) f.style.background=S.view==='w'?'var(--gd)':'var(--g)';
+  ['k','s','p'].forEach(x=>{const e=document.getElementById('n'+x);if(e)e.classList.toggle('a',x===S.view);});
+  if(S.srch) {
+    document.getElementById('mc').innerHTML = bSrch();
+    setTimeout(()=>{fillList();const i=document.getElementById('si');if(i)i.focus();},30);
+    return;
+  }
+  const c=document.getElementById('mc');
+  if(S.view==='k') c.innerHTML=bK();
+  else if(S.view==='w') c.innerHTML=S.step==='confirm'?bConf():bW();
+  else if(S.view==='s') c.innerHTML=bS();
+  else c.innerHTML=bP();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────
 async function init() {
-  if (!checkConfig()) {
-    document.getElementById('loading-overlay').style.display = 'none';
-    document.getElementById('config-notice').style.display = 'flex';
+  if(SUPABASE_URL === 'JOUW_SUPABASE_URL_HIER') {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('cfg').style.display = 'flex';
     return;
   }
   try {
     db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    await seedPlayers();
-    await loadFromDB();
+    await dbSeed();
+    await dbLoad();
     hideLoading();
     render();
   } catch(e) {
-    document.getElementById('loading-overlay').querySelector('p').textContent = 'Verbindingsfout: ' + e.message;
+    document.getElementById('loading').querySelector('p').textContent = 'Verbindingsfout: ' + e.message;
   }
 }
 
