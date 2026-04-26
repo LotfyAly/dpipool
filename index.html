@@ -54,9 +54,9 @@ body{height:100%;margin:0;padding:0;overflow:hidden;font-family:-apple-system,Bl
 .ki:active{border-color:var(--ol)}
 .ki-num{font-size:12px;font-weight:700;color:var(--mid);width:22px;text-align:right;flex-shrink:0}
 .t1{color:#c8a020;font-size:13px}.t2{color:#909090;font-size:13px}.t3{color:#a0623a;font-size:13px}
-.ki-av-wrap{width:36px;height:36px;flex-shrink:0}
-.ki-av-ph{width:36px;height:36px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bor);overflow:hidden}
-.ki-av-img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);display:block}
+.ki-av-wrap{width:44px;height:44px;flex-shrink:0}
+.ki-av-ph{width:44px;height:44px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bor);overflow:hidden}
+.ki-av-img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);display:block}
 .ki-info{flex:1;min-width:0}
 .ki-name{font-size:13px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .ki-elo{font-size:13px;font-weight:700;color:var(--o);flex-shrink:0}
@@ -441,7 +441,7 @@ function kiCard(p,pos){
     :'<div style="font-size:9px;color:var(--mid);margin-top:3px">geen wedstrijden</div>';
   return'<div class="ki" onclick="goP(\''+p.id+'\')">'+
     '<div class="ki-num '+nc+'">'+(medal||pos)+'</div>'+
-    '<div class="ki-av-wrap">'+kiAvatar(p.id,30)+'</div>'+
+    '<div class="ki-av-wrap">'+kiAvatar(p.id,44)+'</div>'+
     '<div class="ki-info">'+
       '<div class="ki-name">'+p.name+arrow(p.id)+qmark+'</div>'+
       '<div class="ki-elo">'+p.elo+' ELO</div>'+
@@ -634,10 +634,10 @@ function bP(){
     var photo=getPhoto(p.id);
     var html='<button class="back" onclick="S.selP=null;render()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Terug</button>';
     // Profile card
-    html+='<div class="card" style="display:flex;align-items:center;gap:12px;margin-bottom:10px">';
+    html+='<div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:10px">';
     html+='<div onclick="uploadPhoto(\''+p.id+'\')" style="position:relative;cursor:pointer;flex-shrink:0">';
-    if(photo)html+='<img src="'+photo+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--bor);display:block" alt="">';
-    else html+='<div style="width:56px;height:56px;border-radius:50%;background:#f0ece6;border:2px dashed var(--bor);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--mid)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span style="font-size:8px;color:var(--mid);font-weight:600">foto</span></div>';
+    if(photo)html+='<img src="'+photo+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--bor);display:block" alt="">';
+    else html+='<div style="width:80px;height:80px;border-radius:50%;background:#f0ece6;border:2px dashed var(--bor);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--mid)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span style="font-size:9px;color:var(--mid);font-weight:600">foto</span></div>';
     html+='<div style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--o);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>';
     html+='</div>';
     html+='<input type="file" id="photo-inp-'+p.id+'" accept="image/*" style="display:none" onchange="handlePhotoUpload(this,\''+p.id+'\')">';
@@ -698,8 +698,9 @@ function closeModal(){
   _modalCallback = null;
 }
 function confirmModal(){
+  var cb = _modalCallback;
   closeModal();
-  if(_modalCallback) _modalCallback();
+  if(cb) cb();
 }
 
 // ── Photo storage via Supabase ────────────────────────────────
