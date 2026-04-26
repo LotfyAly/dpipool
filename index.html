@@ -150,7 +150,7 @@ select:focus{border-color:var(--o)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Klassement<div class="nd"></div>
     </button>
     <button class="nb" id="nq" onclick="go('q')" style="position:relative">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span style="font-size:18px;line-height:1">&#129689;</span>
       Wachtrij<div class="nd"></div><span id="qbadge" style="display:none" class="q-badge"></span>
     </button>
     <div class="nc">
@@ -301,7 +301,7 @@ async function ok(){
     var nextInQueue=S.queue.length>0?find(S.queue[0].speler_id):null;
     if(nextInQueue&&nextInQueue.id!==winId){
       S.p1=winId;S.p2=nextInQueue.id;
-      toast('+'+d+' ELO &middot; <strong>'+nextInQueue.name+'</strong> staat klaar &#127761;');
+      toast('+'+d+' ELO &middot; <strong>'+nextInQueue.name+'</strong> staat klaar &#129689;');
     } else {
       S.p1=null;S.p2=null;
       toast('+'+d+' ELO voor '+wn+'!');
@@ -331,13 +331,13 @@ async function addQueue(pid){
   var ok=await dbAddQueue(pid);
   if(!ok){toast('Staat al in de wachtrij');return}
   await dbLoadQueue();
-  var p=find(pid);toast((p?p.name:'Speler')+' staat in de rij! &#127761;');render();
+  var p=find(pid);toast((p?p.name:'Speler')+' staat in de rij! &#129689;');render();
 }
 async function addQueueAndBack(pid){
   var ok=await dbAddQueue(pid);
   if(!ok){toast('Staat al in de wachtrij');return}
   await dbLoadQueue();
-  var p=find(pid);toast((p?p.name:'Speler')+' staat in de rij! &#127761;');render();
+  var p=find(pid);toast((p?p.name:'Speler')+' staat in de rij! &#129689;');render();
 }
 async function removeQueue(qid){
   await dbRemoveQueue(qid);
@@ -434,7 +434,7 @@ function kiCard(p,pos){
   var medal=pos===1?'&#127947;':pos===2?'&#129352;':pos===3?'&#129353;':'';
   var aq=getActiveQueue();var qpos=-1;
   for(var i=0;i<aq.length;i++){if(aq[i].speler_id===p.id){qpos=i+1;break}}
-  var qmark=qpos===1?'<span style="color:var(--gd);font-size:9px;font-weight:800;margin-left:2px">&#9654;</span>':qpos>1?'<span style="color:var(--mid);font-size:9px;font-weight:700;margin-left:2px">&#127761;'+qpos+'</span>':'';
+  var qmark=qpos===1?'<span style="color:var(--gd);font-size:9px;font-weight:800;margin-left:2px">&#9654;</span>':qpos>1?'<span style="color:var(--mid);font-size:9px;font-weight:700;margin-left:2px">&#129689;'+qpos+'</span>':'';
   var tot=p.wins+p.losses,pct=tot?Math.round(p.wins/tot*100):0;
   var statsHtml=tot
     ?'<div class="ki-stats"><span class="st st-t">'+tot+'&#9679;</span><span class="st st-w">'+p.wins+'W</span><span class="st st-l">'+p.losses+'V</span><span class="st st-p">'+pct+'%</span></div>'
@@ -482,7 +482,7 @@ function bK(){
     html+='</div>';
   } else {
     html+='<div style="background:white;border-radius:var(--rad);border:1px dashed var(--bor);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">';
-    html+='<span style="font-size:18px">&#127761;</span>';
+    html+='<span style="font-size:18px">&#129689;</span>';
     html+='<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--mid)">Wachtrij is leeg</div>';
     html+='<div style="font-size:11px;color:var(--mid);opacity:.7">Leg een muntje via een spelersprofiel</div></div>';
     html+='</div>';
@@ -536,7 +536,7 @@ function bConf(){
     '<div class="cx">'+kiAvatar(m.wid,40)+'<div style="margin:0 auto 0;font-size:13px;font-weight:700;color:var(--n);margin-top:6px;margin-bottom:4px">'+m.wn+'</div><div style="font-size:12px;color:var(--mid)">'+m.we+' &#8594; <strong style="color:var(--gd)">'+nwe+'</strong></div><div style="font-size:13px;color:var(--gd);font-weight:800;margin-top:3px">+'+m.d+' ELO</div></div>'+
     '<div class="cx">'+kiAvatar(m.lid,40)+'<div style="margin:0 auto 0;font-size:13px;font-weight:700;color:var(--n);margin-top:6px;margin-bottom:4px">'+m.ln+'</div><div style="font-size:12px;color:var(--mid)">'+m.le+' &#8594; <strong style="color:#c0392b">'+nle+'</strong></div><div style="font-size:13px;color:#c0392b;font-weight:800;margin-top:3px">-'+m.d+' ELO</div></div>'+
     '</div>'+
-    (nextP&&nextP.id!==m.wid?'<div style="background:var(--gl);border:1px solid var(--gd);border-radius:var(--rad);padding:10px 14px;width:100%;margin-bottom:14px;text-align:left;display:flex;align-items:center;gap:10px">'+kiAvatar(nextP.id,32)+'<div><div style="font-size:10px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.08em">Volgende uitdager</div><div style="font-size:14px;font-weight:700;color:var(--n)">&#127761; '+nextP.name+'</div></div></div>':'')+
+    (nextP&&nextP.id!==m.wid?'<div style="background:var(--gl);border:1px solid var(--gd);border-radius:var(--rad);padding:10px 14px;width:100%;margin-bottom:14px;text-align:left;display:flex;align-items:center;gap:10px">'+kiAvatar(nextP.id,32)+'<div><div style="font-size:10px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.08em">Volgende uitdager</div><div style="font-size:14px;font-weight:700;color:var(--n)">&#129689; '+nextP.name+'</div></div></div>':'')+
     '<div style="display:flex;gap:10px;width:100%"><button class="obtn" onclick="cancel()" style="flex:1">Annuleer</button><button class="btn" onclick="ok()" style="flex:2">Bevestig &#10003;</button></div>'+
     '</div>';
 }
@@ -548,7 +548,7 @@ function bQ(){
   var html='';
   if(!aq.length){
     html+='<div style="background:var(--n);border-radius:var(--rad);padding:22px 16px;text-align:center;margin-bottom:14px">';
-    html+='<div style="font-size:36px;margin-bottom:10px">&#127761;</div>';
+    html+='<div style="font-size:36px;margin-bottom:10px">&#129689;</div>';
     html+='<div style="color:white;font-size:17px;font-weight:700;margin-bottom:5px">Wachtrij is leeg</div>';
     html+='<div style="color:rgba(255,255,255,.55);font-size:13px;line-height:1.5">Leg een muntje om in de rij te staan</div></div>';
   } else {
@@ -585,7 +585,7 @@ function buildQListHtml(players,inQueueIds){
     html+=kiAvatar(p.id,30);
     html+='<div style="flex:1;font-size:13px;font-weight:600;color:var(--n)">'+p.name+(already?'<span style="font-size:10px;color:var(--mid);font-weight:500"> &middot; #'+pos+' in rij</span>':'')+'</div>';
     if(already)html+='<span style="font-size:11px;color:var(--mid);font-weight:600;flex-shrink:0">In de rij</span>';
-    else html+='<button onclick="addQueue(this.dataset.pid)" data-pid="'+p.id+'" style="background:var(--n);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;-webkit-appearance:none;appearance:none">&#127761; Leg</button>';
+    else html+='<button onclick="addQueue(this.dataset.pid)" data-pid="'+p.id+'" style="background:var(--n);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;-webkit-appearance:none;appearance:none">&#129689; Leg</button>';
     html+='</div>';
   }
   return html;
@@ -649,13 +649,13 @@ function bP(){
     // Queue status / button
     if(inQ.length){
       html+='<div style="display:flex;align-items:center;gap:8px;background:var(--gl);border:1.5px solid var(--gd);border-radius:var(--rad);padding:10px 14px;margin-bottom:10px">';
-      html+='<span style="font-size:18px">&#127761;</span>';
+      html+='<span style="font-size:18px">&#129689;</span>';
       html+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--gd)">'+(qPos===1?'Aan de beurt!':'#'+qPos+' in de wachtrij')+'</div>';
       html+='<div style="font-size:11px;color:var(--gd);opacity:.8">'+p.name+' staat klaar om te spelen</div></div>';
       html+='<button onclick="removeQueue(this.dataset.qid)" data-qid="'+inQ[0].id+'" style="border:none;background:rgba(0,0,0,.08);color:var(--gd);cursor:pointer;font-size:11px;padding:5px 10px;border-radius:7px;font-family:inherit;font-weight:700;-webkit-appearance:none;appearance:none">Verwijder</button>';
       html+='</div>';
     } else {
-      html+='<button onclick="addQueueAndBack(\''+p.id+'\')" class="btn btn-dark" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:16px">&#127761;</span> Leg muntje</button>';
+      html+='<button onclick="addQueueAndBack(\''+p.id+'\')" class="btn btn-dark" style="margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:16px">&#129689;</span> Leg muntje</button>';
     }
     // Stats
     html+='<div class="sg"><div class="sb"><div style="font-size:22px;font-weight:800;color:var(--o)">'+p.elo+'</div><div style="font-size:10px;color:var(--mid);margin-top:3px;font-weight:700;text-transform:uppercase">ELO</div></div>';
