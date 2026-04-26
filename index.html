@@ -175,15 +175,18 @@ async function dbLoad(){
 }
 
 async function dbLoadQueue(){
-  var r=await db.from('wachtrij').select('*').in('status',['wachtend','aan_de_beurt']).order('aangemaakt_op',{ascending:true});
-  S.queue=(r.data||[]);
+  try{
+    var r=await db.from('wachtrij').select('*').in('status',['wachtend','aan_de_beurt']).order('aangemaakt_op',{ascending:true});
+    S.queue=(r.data||[]);
+  }catch(e){S.queue=[];}
 }
 async function dbAddQueue(pid){
-  // Check not already in queue
-  var already=S.queue.filter(function(q){return q.speler_id===pid&&q.status!=='klaar'});
-  if(already.length)return false;
-  await db.from('wachtrij').insert({speler_id:pid,status:'wachtend'});
-  return true;
+  try{
+    var already=S.queue.filter(function(q){return q.speler_id===pid&&q.status!=='klaar'});
+    if(already.length)return false;
+    await db.from('wachtrij').insert({speler_id:pid,status:'wachtend'});
+    return true;
+  }catch(e){toast('Fout: voer eerst de wachtrij-migration.sql uit in Supabase');return false;}
 }
 async function dbRemoveQueue(id){
   await db.from('wachtrij').delete().eq('id',id);
@@ -192,9 +195,11 @@ async function dbClearQueue(){
   await db.from('wachtrij').update({status:'klaar'}).in('status',['wachtend','aan_de_beurt']);
 }
 function setupRealtime(){
-  db.channel('wachtrij-live').on('postgres_changes',{event:'*',schema:'public',table:'wachtrij'},function(){
-    dbLoadQueue().then(function(){render()});
-  }).subscribe();
+  try{
+    db.channel('wachtrij-live').on('postgres_changes',{event:'*',schema:'public',table:'wachtrij'},function(){
+      dbLoadQueue().then(function(){render()}).catch(function(){});
+    }).subscribe();
+  }catch(e){}
 }
 
 async function dbSeed(){
@@ -205,7 +210,7 @@ async function dbSeed(){
 
 function go(v){
   S.srch=null;S.sq='';S.view=v;S.selP=null;S.step='form';S.pend=null;
-  ['k','s','p'].forEach(function(x){var e=document.getElementById('n'+x);if(e){var c=e.className.replace(/\ba\b/,'').trim();e.className=c+(x===v?' a':'')}});
+  ['k','q','s','p'].forEach(function(x){var e=document.getElementById('n'+x);if(e){var c=e.className.replace(/\ba\b/g,'').trim();e.className=c+(x===v?' a':'')}});
   var f=document.getElementById('fab');if(f)f.style.background=v==='w'?'var(--gd)':'var(--g)';render();
 }
 
@@ -244,9 +249,10 @@ async function ok(){
     await dbLoad();
     var wn=m.wn,d=m.d;S.step='form';S.pend=null;S.p1=null;S.p2=null;S.wid=null;
     await dbLoadQueue();
+    var winId=m.wid;
     var nextInQueue=S.queue.length>0?find(S.queue[0].speler_id):null;
-    if(nextInQueue&&nextInQueue.id!==wid){
-      S.p1=wid;S.p2=nextInQueue.id;S.wid=null;
+    if(nextInQueue&&nextInQueue.id!==winId){
+      S.p1=winId;S.p2=nextInQueue.id;S.wid=null;
       toast('+'+d+' ELO · '+nextInQueue.name+' staat klaar &#127761;');
     } else {
       toast('+'+d+' ELO voor '+wn+'!');
@@ -503,7 +509,15 @@ function render(){
 
 async function init(){
   if(SUPABASE_URL==='JOUW_SUPABASE_URL_HIER'){document.getElementById('loading').style.display='none';document.getElementById('cfg').style.display='-webkit-box';document.getElementById('cfg').style.display='-webkit-flex';document.getElementById('cfg').style.display='-ms-flexbox';document.getElementById('cfg').style.display='flex';return}
-  try{db=_sb.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);await dbSeed();await Promise.all([dbLoad(),dbLoadQueue()]);setupRealtime();hideLoad();render()}
+  try{
+    db=_sb.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    await dbSeed();
+    await dbLoad();
+    await dbLoadQueue();
+    setupRealtime();
+    hideLoad();
+    render();
+  }
   catch(e){document.getElementById('loading').querySelector('p').textContent='Verbindingsfout: '+e.message}
 }
 init();
