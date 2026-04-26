@@ -109,6 +109,15 @@ select:focus{border-color:var(--o)}
 .ki-info{-webkit-box-flex:1;-webkit-flex:1;flex:1;min-width:0}
 .ki-name{font-size:11px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;line-height:1.2}
 .ki-elo{font-size:11px;font-weight:700;color:var(--o);line-height:1.2;margin-top:1px}
+.ki-stats{display:-webkit-box;display:-webkit-flex;display:flex;gap:4px;margin-top:3px;-webkit-flex-wrap:wrap;flex-wrap:wrap;align-items:center}
+.ki-stat{font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;line-height:1.4;white-space:nowrap}
+.ki-stat-t{background:#f0ece6;color:var(--mid)}
+.ki-stat-w{background:#d4efdf;color:#1a5c35}
+.ki-stat-l{background:#fad7d7;color:#c0392b}
+.ki-stat-p{background:var(--ol);color:var(--od)}
+.ki-avatar-wrap{position:relative;width:30px;height:30px;flex-shrink:0}
+.ki-avatar-img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor)}
+.ki-avatar-svg{width:30px;height:30px;border-radius:50%;background:#eee;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-align:center;-webkit-align-items:center;align-items:center;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center;border:1.5px solid var(--bor);overflow:hidden}
 </style>
 </head>
 <body>
@@ -157,7 +166,7 @@ select:focus{border-color:var(--o)}
 <script>
 var _sb=supabase,ELO0=1200,K=32,PWD='Hetistijdvooreennieuwestart';
 var NAMES=["Anouk","Arjen","David","Dennis","Dorte","Elise","Femke","Ferry","Floortje","Fyodor","Gert Jan","Giovanni","Hans","Jacob","Jacques","Jasper d.","Jasper S.","Jelle","Jesse B.","Jesse v.","Jesse W.","Joram","Judith","Kirsten","Kitty","Koen","Laith","Laurens","Lizzy","Lotfy","Mara","Mark O.","Mark S.","Marvin","Max","Michel","Myrthe","Natasja","Nicholas","Niels d.","Niels H.","Ott","Pieter","Redginald","Roan","Robbert L.","Robbert v.","Roland","Rolf","Ruben","Ruurd","Sasha","Stan","Thijs","Ties","Tim","Tjalling","Tom","Veronique","Wesley","Wouter","Alexander","Allard","Dick","Douwe","Esm\u00e9e","Ileen","John","Kees","Kelly","Nick","Nicole","Philine","Saar","Sander","Yashica","Rob"];
-var db=null,S={players:[],matches:[],view:'k',selP:null,step:'form',pend:null,p1:null,p2:null,wid:null,srch:null,sq:'',h1:'',h2:''};
+var db=null,S={players:[],matches:[],queue:[],view:'k',selP:null,step:'form',pend:null,p1:null,p2:null,wid:null,srch:null,sq:'',h1:'',h2:'',qSrchQ:''};
 
 function uid(){return Math.random().toString(36).slice(2,9)}
 function ini(n){return(n||'').split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0]||''}).join('').toUpperCase()}
@@ -169,9 +178,12 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style
 function hideLoad(){document.getElementById('loading').style.display='none';document.getElementById('app').style.display='-webkit-box';document.getElementById('app').style.display='-webkit-flex';document.getElementById('app').style.display='-ms-flexbox';document.getElementById('app').style.display='flex'}
 
 async function dbLoad(){
-  var res=await Promise.all([db.from('players').select('*').order('elo',{ascending:false}),db.from('matches').select('*').order('created_at',{ascending:false}).limit(200)]);
-  S.players=(res[0].data||[]).map(function(p){return{id:p.id,name:p.name,elo:p.elo,wins:p.wins,losses:p.losses}});
-  S.matches=(res[1].data||[]).map(function(m){return{id:m.id,wid:m.winner_id,lid:m.loser_id,d:m.delta,date:m.created_at}});
+  var r1=await db.from('players').select('*').order('elo',{ascending:false});
+  var r2=await db.from('matches').select('*').order('created_at',{ascending:false}).limit(200);
+  if(r1.error)throw new Error('players: '+r1.error.message);
+  if(r2.error)throw new Error('matches: '+r2.error.message);
+  S.players=(r1.data||[]).map(function(p){return{id:p.id,name:p.name,elo:p.elo,wins:p.wins,losses:p.losses}});
+  S.matches=(r2.data||[]).map(function(m){return{id:m.id,wid:m.winner_id,lid:m.loser_id,d:m.delta,date:m.created_at}});
 }
 
 async function dbLoadQueue(){
@@ -204,6 +216,7 @@ function setupRealtime(){
 
 async function dbSeed(){
   var r=await db.from('players').select('id').limit(1);
+  if(r.error)throw new Error('Supabase verbinding mislukt: '+r.error.message);
   if(r.data&&r.data.length>0)return;
   await db.from('players').insert(NAMES.map(function(n){return{name:n,elo:ELO0,wins:0,losses:0}}));
 }
@@ -413,65 +426,82 @@ function bP(){if(S.selP){var p=find(S.selP);if(!p){S.selP=null;return bP()}
 function bQ(){
   var active=S.queue.filter(function(q){return q.status==='wachtend'||q.status==='aan_de_beurt'});
   var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
+  var inQueueIds=active.map(function(q){return q.speler_id});
   var html='';
-  // Queue banner
-  if(active.length===0){
-    html+='<div style="background:var(--n);border-radius:var(--rad);padding:20px 16px;text-align:center;margin-bottom:14px">';
-    html+='<div style="font-size:32px;margin-bottom:8px">🪙</div>';
-    html+='<div style="color:white;font-size:16px;font-weight:700;margin-bottom:4px">Wachtrij leeg</div>';
-    html+='<div style="color:rgba(255,255,255,.6);font-size:13px">Leg een muntje om in de rij te staan</div>';
+
+  if(!active.length){
+    html+='<div style="background:var(--n);border-radius:var(--rad);padding:22px 16px;text-align:center;margin-bottom:14px">';
+    html+='<div style="font-size:36px;margin-bottom:10px">&#127761;</div>';
+    html+='<div style="color:white;font-size:17px;font-weight:700;margin-bottom:5px">Wachtrij is leeg</div>';
+    html+='<div style="color:rgba(255,255,255,.55);font-size:13px;line-height:1.5">Leg een muntje via de lijst hieronder om in de rij te staan</div>';
     html+='</div>';
   } else {
-    // Show queue items
-    html+='<div class="lbl">'+active.length+' in de wachtrij</div>';
-    active.forEach(function(q,i){
-      var p=find(q.speler_id);if(!p)return;
-      var isFirst=i===0;
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">';
+    html+='<div class="lbl" style="margin-bottom:0;flex:1">'+active.length+' in de wachtrij</div>';
+    html+='<button onclick="clearQueue()" style="font-size:10px;color:var(--mid);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:600;padding:0">Leegmaken</button>';
+    html+='</div>';
+    for(var qi=0;qi<active.length;qi++){
+      var q=active[qi];
+      var p=find(q.speler_id);if(!p)continue;
+      var isFirst=qi===0;
       var t=new Date(q.aangemaakt_op);
       var ts=t.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--rad);margin-bottom:4px;background:'+(isFirst?'var(--gl)':'#fff')+';border:1px solid '+(isFirst?'var(--gd)':'var(--bor)')+';box-shadow:0 1px 3px rgba(0,0,0,.04)">';
-      html+='<div style="width:28px;height:28px;border-radius:50%;background:'+(isFirst?'var(--gd)':'var(--ol)')+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">'+(isFirst?'&#9654;':(i+1))+'</div>';
-      html+='<div style="width:30px;height:30px;border-radius:50%;background:'+(isFirst?'rgba(255,255,255,.5)':'var(--ol)')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--od);flex-shrink:0">'+ini(p.name)+'</div>';
-      html+='<div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--n)">'+p.name+(isFirst?'  <span style="font-size:11px;background:var(--gd);color:#fff;padding:2px 7px;border-radius:10px;font-weight:700">Aan de beurt</span>':'')+'</div>';
-      html+='<div style="font-size:11px;color:var(--mid);margin-top:1px">Ingelegd om '+ts+'</div></div>';
-      html+='<button onclick="removeQueue(''+q.id+'')" style="border:none;background:none;color:var(--mid);cursor:pointer;font-size:18px;padding:4px;line-height:1;flex-shrink:0">&#215;</button>';
+      var qid=q.id;
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--rad);margin-bottom:5px;background:'+(isFirst?'var(--gl)':'#fff')+';border:1.5px solid '+(isFirst?'var(--gd)':'var(--bor)')+';box-shadow:0 1px 3px rgba(0,0,0,.04)">';
+      html+='<div style="width:30px;height:30px;border-radius:50%;background:'+(isFirst?'var(--gd)':'var(--bor)')+';display:flex;align-items:center;justify-content:center;font-size:'+(isFirst?14:13)+'px;font-weight:800;color:'+(isFirst?'#fff':'var(--mid)')+';flex-shrink:0">'+(isFirst?'&#9654;':(qi+1))+'</div>';
+      html+='<div style="width:32px;height:32px;border-radius:50%;background:var(--ol);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--od);flex-shrink:0">'+ini(p.name)+'</div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:14px;font-weight:700;color:var(--n);display:flex;align-items:center;gap:6px">'+p.name;
+      if(isFirst)html+='<span style="font-size:10px;background:var(--gd);color:#fff;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap">Aan de beurt</span>';
       html+='</div>';
-    });
+      html+='<div style="font-size:11px;color:var(--mid);margin-top:2px">Ingelegd om '+ts+'</div>';
+      html+='</div>';
+      html+='<button onclick="removeQueue(this.dataset.qid)" data-qid="'+qid+'" style="border:none;background:rgba(0,0,0,.06);color:var(--mid);cursor:pointer;font-size:16px;padding:4px 8px;line-height:1;border-radius:6px;flex-shrink:0">&#215;</button>';
+      html+='</div>';
+    }
     html+='<div class="div"></div>';
   }
-  // Add to queue section
+
   html+='<div class="lbl">Muntje leggen</div>';
   html+='<div class="card">';
-  // Search/filter players
-  var inQueue=S.queue.filter(function(q){return q.status!=='klaar'}).map(function(q){return q.speler_id});
-  var available=sp.filter(function(p){var q=S.qSrchQ.toLowerCase();return(!q||p.name.toLowerCase().indexOf(q)>-1)});
-  html+='<input type="search" placeholder="Zoek speler..." style="margin-bottom:10px" oninput="S.qSrchQ=this.value;document.getElementById('qlist').innerHTML=buildQList()" autocorrect="off" autocapitalize="off" id="q-search">';
-  html+='<div id="qlist">'+buildQListHtml(available,inQueue)+'</div>';
+  html+='<input type="search" placeholder="Zoek speler..." style="margin-bottom:10px" oninput="qSearch(this.value)" autocorrect="off" autocapitalize="off">';
+  html+='<div id="qlist">'+buildQListHtml(sp,inQueueIds)+'</div>';
   html+='</div>';
   return html;
 }
 
-function buildQList(){
-  var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
-  var inQueue=S.queue.filter(function(q){return q.status!=='klaar'}).map(function(q){return q.speler_id});
+function buildQListHtml(players,inQueueIds){
   var q=S.qSrchQ.toLowerCase();
-  var available=sp.filter(function(p){return(!q||p.name.toLowerCase().indexOf(q)>-1)});
-  return buildQListHtml(available,inQueue);
+  var filtered=q?players.filter(function(p){return p.name.toLowerCase().indexOf(q)>-1}):players;
+  if(!filtered.length)return'<div class="empty" style="padding:12px 0">Geen spelers gevonden</div>';
+  var html='';
+  for(var i=0;i<filtered.length;i++){
+    var p=filtered[i];
+    var already=inQueueIds.indexOf(p.id)>-1;
+    var pos=-1;
+    if(already){var aq=S.queue.filter(function(x){return x.status!=='klaar'});for(var j=0;j<aq.length;j++){if(aq[j].speler_id===p.id){pos=j+1;break}}}
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0ece6">';
+    html+='<div style="width:30px;height:30px;border-radius:50%;background:var(--ol);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--od);flex-shrink:0">'+ini(p.name)+'</div>';
+    html+='<div style="flex:1;font-size:13px;font-weight:600;color:var(--n)">'+p.name+(already?'<span style="font-size:10px;color:var(--mid);font-weight:500"> &middot; #'+pos+' in rij</span>':'')+'</div>';
+    if(already){
+      html+='<span style="font-size:11px;color:var(--mid);font-weight:600;flex-shrink:0">In de rij</span>';
+    } else {
+      html+='<button onclick="addQueue(this.dataset.pid)" data-pid="'+p.id+'" style="background:var(--n);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">&#127761; Leg</button>';
+    }
+    html+='</div>';
+  }
+  return html;
 }
 
-function buildQListHtml(available,inQueue){
-  return available.map(function(p){
-    var already=inQueue.indexOf(p.id)>-1;
-    var pos=-1;if(already){var qi=S.queue.filter(function(q){return q.status!=='klaar'});for(var i=0;i<qi.length;i++){if(qi[i].speler_id===p.id){pos=i+1;break}}}
-    return'<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0ece6">'+
-      '<div style="width:30px;height:30px;border-radius:50%;background:var(--ol);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--od);flex-shrink:0">'+ini(p.name)+'</div>'+
-      '<div style="flex:1;font-size:13px;font-weight:600;color:var(--n)">'+p.name+(already?'<span style="font-size:10px;color:var(--mid);font-weight:500"> · #'+pos+' in rij</span>':'')+'</div>'+
-      (already
-        ? '<span style="font-size:11px;color:var(--mid);font-weight:600">In de rij</span>'
-        : '<button onclick="addQueue(''+p.id+'')" style="background:var(--n);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none">🪙 Leg</button>'
-      )+'</div>';
-  }).join('')||'<div class="empty" style="padding:12px 0">Geen spelers gevonden</div>';
+function qSearch(val){
+  S.qSrchQ=val;
+  var el=document.getElementById('qlist');
+  if(!el)return;
+  var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
+  var inQ=S.queue.filter(function(q){return q.status!=='klaar'}).map(function(q){return q.speler_id});
+  el.innerHTML=buildQListHtml(sp,inQ);
 }
+
 
 async function addQueue(pid){
   var ok=await dbAddQueue(pid);
@@ -492,6 +522,25 @@ async function clearQueue(){
   await dbClearQueue();
   await dbLoadQueue();
   toast('Wachtrij geleegd');render();
+}
+
+function uploadPhoto(pid){
+  var inp=document.getElementById('photo-inp-'+pid);
+  if(inp)inp.click();
+}
+function handlePhotoUpload(input,pid){
+  var file=input.files[0];if(!file)return;
+  if(file.size>2*1024*1024){toast('Foto mag max 2MB zijn');return}
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{localStorage.setItem('photo_'+pid,e.target.result)}catch(ex){toast('Foto opslaan mislukt');}
+    toast('Foto opgeslagen!');render();
+  };
+  reader.readAsDataURL(file);
+}
+function removePhoto(pid){
+  try{localStorage.removeItem('photo_'+pid)}catch(e){}
+  toast('Foto verwijderd');render();
 }
 
 function render(){
@@ -518,7 +567,7 @@ async function init(){
     hideLoad();
     render();
   }
-  catch(e){document.getElementById('loading').querySelector('p').textContent='Verbindingsfout: '+e.message}
+  catch(e){var msg=e&&e.message?e.message:JSON.stringify(e);document.getElementById('loading').querySelector('p').textContent='Fout: '+msg;console.error('Init error:',e);}
 }
 init();
 </script>
