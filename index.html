@@ -134,6 +134,10 @@ select:focus{border-color:var(--o)}
     <button class="nb a" id="nk" onclick="go('k')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Klassement<div class="nd"></div>
     </button>
+    <button class="nb" id="nq" onclick="go('q')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" font-family="sans-serif">&#127761;</text></svg>
+      Wachtrij<div class="nd"></div><span id="q-badge" style="display:none;position:absolute;top:6px;background:var(--o);color:#fff;border-radius:10px;font-size:9px;font-weight:700;padding:1px 5px;margin-left:2px"></span>
+    </button>
     <div class="nc">
       <div class="fab" id="fab" onclick="go('w')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -169,6 +173,30 @@ async function dbLoad(){
   S.players=(res[0].data||[]).map(function(p){return{id:p.id,name:p.name,elo:p.elo,wins:p.wins,losses:p.losses}});
   S.matches=(res[1].data||[]).map(function(m){return{id:m.id,wid:m.winner_id,lid:m.loser_id,d:m.delta,date:m.created_at}});
 }
+
+async function dbLoadQueue(){
+  var r=await db.from('wachtrij').select('*').in('status',['wachtend','aan_de_beurt']).order('aangemaakt_op',{ascending:true});
+  S.queue=(r.data||[]);
+}
+async function dbAddQueue(pid){
+  // Check not already in queue
+  var already=S.queue.filter(function(q){return q.speler_id===pid&&q.status!=='klaar'});
+  if(already.length)return false;
+  await db.from('wachtrij').insert({speler_id:pid,status:'wachtend'});
+  return true;
+}
+async function dbRemoveQueue(id){
+  await db.from('wachtrij').delete().eq('id',id);
+}
+async function dbClearQueue(){
+  await db.from('wachtrij').update({status:'klaar'}).in('status',['wachtend','aan_de_beurt']);
+}
+function setupRealtime(){
+  db.channel('wachtrij-live').on('postgres_changes',{event:'*',schema:'public',table:'wachtrij'},function(){
+    dbLoadQueue().then(function(){render()});
+  }).subscribe();
+}
+
 async function dbSeed(){
   var r=await db.from('players').select('id').limit(1);
   if(r.data&&r.data.length>0)return;
@@ -215,7 +243,15 @@ async function ok(){
     ]);
     await dbLoad();
     var wn=m.wn,d=m.d;S.step='form';S.pend=null;S.p1=null;S.p2=null;S.wid=null;
-    toast('+'+d+' ELO voor '+wn+'!');render();
+    await dbLoadQueue();
+    var nextInQueue=S.queue.length>0?find(S.queue[0].speler_id):null;
+    if(nextInQueue&&nextInQueue.id!==wid){
+      S.p1=wid;S.p2=nextInQueue.id;S.wid=null;
+      toast('+'+d+' ELO · '+nextInQueue.name+' staat klaar &#127761;');
+    } else {
+      toast('+'+d+' ELO voor '+wn+'!');
+    }
+    render();
   }catch(e){toast('Fout: '+e.message)}
 }
 function cancel(){S.step='form';S.pend=null;render()}
@@ -367,18 +403,107 @@ function bP(){if(S.selP){var p=find(S.selP);if(!p){S.selP=null;return bP()}
   html+='<input type="search" placeholder="Zoek speler..." style="margin-bottom:10px" oninput="filterP(this.value)" autocorrect="off" autocapitalize="off">';
   html+='<div id="plist">'+a.map(function(p){var r=0;for(var i=0;i<s.length;i++){if(s[i].id===p.id){r=i+1;break}}var t=p.wins+p.losses;return'<div class="pi" onclick="goP(\''+p.id+'\')"><div class="av">'+ini(p.name)+'</div><div class="rii"><div class="rname">'+p.name+'</div><div class="rsub">#'+r+' &middot; '+p.wins+'W '+p.losses+'V'+(t?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>'}).join('')+'</div>';return html}
 
+
+function bQ(){
+  var active=S.queue.filter(function(q){return q.status==='wachtend'||q.status==='aan_de_beurt'});
+  var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
+  var html='';
+  // Queue banner
+  if(active.length===0){
+    html+='<div style="background:var(--n);border-radius:var(--rad);padding:20px 16px;text-align:center;margin-bottom:14px">';
+    html+='<div style="font-size:32px;margin-bottom:8px">🪙</div>';
+    html+='<div style="color:white;font-size:16px;font-weight:700;margin-bottom:4px">Wachtrij leeg</div>';
+    html+='<div style="color:rgba(255,255,255,.6);font-size:13px">Leg een muntje om in de rij te staan</div>';
+    html+='</div>';
+  } else {
+    // Show queue items
+    html+='<div class="lbl">'+active.length+' in de wachtrij</div>';
+    active.forEach(function(q,i){
+      var p=find(q.speler_id);if(!p)return;
+      var isFirst=i===0;
+      var t=new Date(q.aangemaakt_op);
+      var ts=t.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--rad);margin-bottom:4px;background:'+(isFirst?'var(--gl)':'#fff')+';border:1px solid '+(isFirst?'var(--gd)':'var(--bor)')+';box-shadow:0 1px 3px rgba(0,0,0,.04)">';
+      html+='<div style="width:28px;height:28px;border-radius:50%;background:'+(isFirst?'var(--gd)':'var(--ol)')+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0">'+(isFirst?'&#9654;':(i+1))+'</div>';
+      html+='<div style="width:30px;height:30px;border-radius:50%;background:'+(isFirst?'rgba(255,255,255,.5)':'var(--ol)')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--od);flex-shrink:0">'+ini(p.name)+'</div>';
+      html+='<div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--n)">'+p.name+(isFirst?'  <span style="font-size:11px;background:var(--gd);color:#fff;padding:2px 7px;border-radius:10px;font-weight:700">Aan de beurt</span>':'')+'</div>';
+      html+='<div style="font-size:11px;color:var(--mid);margin-top:1px">Ingelegd om '+ts+'</div></div>';
+      html+='<button onclick="removeQueue(''+q.id+'')" style="border:none;background:none;color:var(--mid);cursor:pointer;font-size:18px;padding:4px;line-height:1;flex-shrink:0">&#215;</button>';
+      html+='</div>';
+    });
+    html+='<div class="div"></div>';
+  }
+  // Add to queue section
+  html+='<div class="lbl">Muntje leggen</div>';
+  html+='<div class="card">';
+  // Search/filter players
+  var inQueue=S.queue.filter(function(q){return q.status!=='klaar'}).map(function(q){return q.speler_id});
+  var available=sp.filter(function(p){var q=S.qSrchQ.toLowerCase();return(!q||p.name.toLowerCase().indexOf(q)>-1)});
+  html+='<input type="search" placeholder="Zoek speler..." style="margin-bottom:10px" oninput="S.qSrchQ=this.value;document.getElementById('qlist').innerHTML=buildQList()" autocorrect="off" autocapitalize="off" id="q-search">';
+  html+='<div id="qlist">'+buildQListHtml(available,inQueue)+'</div>';
+  html+='</div>';
+  return html;
+}
+
+function buildQList(){
+  var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
+  var inQueue=S.queue.filter(function(q){return q.status!=='klaar'}).map(function(q){return q.speler_id});
+  var q=S.qSrchQ.toLowerCase();
+  var available=sp.filter(function(p){return(!q||p.name.toLowerCase().indexOf(q)>-1)});
+  return buildQListHtml(available,inQueue);
+}
+
+function buildQListHtml(available,inQueue){
+  return available.map(function(p){
+    var already=inQueue.indexOf(p.id)>-1;
+    var pos=-1;if(already){var qi=S.queue.filter(function(q){return q.status!=='klaar'});for(var i=0;i<qi.length;i++){if(qi[i].speler_id===p.id){pos=i+1;break}}}
+    return'<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0ece6">'+
+      '<div style="width:30px;height:30px;border-radius:50%;background:var(--ol);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--od);flex-shrink:0">'+ini(p.name)+'</div>'+
+      '<div style="flex:1;font-size:13px;font-weight:600;color:var(--n)">'+p.name+(already?'<span style="font-size:10px;color:var(--mid);font-weight:500"> · #'+pos+' in rij</span>':'')+'</div>'+
+      (already
+        ? '<span style="font-size:11px;color:var(--mid);font-weight:600">In de rij</span>'
+        : '<button onclick="addQueue(''+p.id+'')" style="background:var(--n);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none">🪙 Leg</button>'
+      )+'</div>';
+  }).join('')||'<div class="empty" style="padding:12px 0">Geen spelers gevonden</div>';
+}
+
+async function addQueue(pid){
+  var ok=await dbAddQueue(pid);
+  if(!ok){toast('Staat al in de wachtrij');return}
+  await dbLoadQueue();
+  var p=find(pid);toast((p?p.name:'Speler')+' staat in de rij! 🪙');
+  render();
+}
+
+async function removeQueue(qid){
+  await dbRemoveQueue(qid);
+  await dbLoadQueue();
+  toast('Uit de wachtrij verwijderd');render();
+}
+
+async function clearQueue(){
+  if(!confirm('Wachtrij leegmaken?'))return;
+  await dbClearQueue();
+  await dbLoadQueue();
+  toast('Wachtrij geleegd');render();
+}
+
 function render(){
   var ct=document.getElementById('ct');if(ct)ct.textContent=S.matches.length?S.matches.length+'x':'';
   var f=document.getElementById('fab');if(f)f.style.background=S.view==='w'?'var(--gd)':'var(--g)';
-  ['k','s','p'].forEach(function(x){var e=document.getElementById('n'+x);if(e){var c=e.className.replace(/\ba\b/,'').trim();e.className=c+(S.view===x?' a':'')}});
+  ['k','q','s','p'].forEach(function(x){var e=document.getElementById('n'+x);if(e){var c=e.className.replace(/\ba\b/,'').trim();e.className=c+(S.view===x?' a':'')}});
   if(S.srch){document.getElementById('mc').innerHTML=bSrch();setTimeout(function(){fillList();var i=document.getElementById('si');if(i)i.focus()},50);return}
   var c=document.getElementById('mc');
-  if(S.view==='k')c.innerHTML=bK();else if(S.view==='w')c.innerHTML=S.step==='confirm'?bConf():bW();else if(S.view==='s')c.innerHTML=bS();else c.innerHTML=bP();
+  // Queue badge
+  var qLen=S.queue.filter(function(q){return q.status!=='klaar'}).length;
+  var badge=document.getElementById('q-badge');
+  if(badge){if(qLen>0){badge.style.display='inline';badge.textContent=qLen}else{badge.style.display='none'}}
+  if(S.view==='k')c.innerHTML=bK();else if(S.view==='q')c.innerHTML=bQ();else if(S.view==='w')c.innerHTML=S.step==='confirm'?bConf():bW();else if(S.view==='s')c.innerHTML=bS();else c.innerHTML=bP();
 }
 
 async function init(){
   if(SUPABASE_URL==='JOUW_SUPABASE_URL_HIER'){document.getElementById('loading').style.display='none';document.getElementById('cfg').style.display='-webkit-box';document.getElementById('cfg').style.display='-webkit-flex';document.getElementById('cfg').style.display='-ms-flexbox';document.getElementById('cfg').style.display='flex';return}
-  try{db=_sb.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);await dbSeed();await dbLoad();hideLoad();render()}
+  try{db=_sb.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);await dbSeed();await Promise.all([dbLoad(),dbLoadQueue()]);setupRealtime();hideLoad();render()}
   catch(e){document.getElementById('loading').querySelector('p').textContent='Verbindingsfout: '+e.message}
 }
 init();
