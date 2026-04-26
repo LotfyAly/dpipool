@@ -48,19 +48,19 @@ body{height:100%;margin:0;padding:0;overflow:hidden;font-family:-apple-system,Bl
 .lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--n);opacity:.45;margin-bottom:9px;text-transform:uppercase}
 .plbl{font-size:10px;font-weight:700;color:var(--n);opacity:.55;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em}
 /* Two-column ranking */
-.kcols{display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:start}
-.kcol{display:flex;flex-direction:column;gap:4px}
-.ki{display:flex;align-items:flex-start;gap:6px;padding:8px 8px;border-radius:9px;cursor:pointer;background:#fff;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:border-color .12s}
+.kcols{display:flex;flex-direction:column;gap:4px}
+.kcol{display:contents}
+.ki{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--rad);cursor:pointer;background:#fff;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:border-color .12s}
 .ki:active{border-color:var(--ol)}
-.ki-num{font-size:11px;font-weight:700;color:var(--mid);width:16px;text-align:right;flex-shrink:0;margin-top:3px}
+.ki-num{font-size:12px;font-weight:700;color:var(--mid);width:22px;text-align:right;flex-shrink:0}
 .t1{color:#c8a020;font-size:13px}.t2{color:#909090;font-size:13px}.t3{color:#a0623a;font-size:13px}
-.ki-av-wrap{width:30px;height:30px;flex-shrink:0}
-.ki-av-ph{width:30px;height:30px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bor);overflow:hidden}
-.ki-av-img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);display:block}
+.ki-av-wrap{width:36px;height:36px;flex-shrink:0}
+.ki-av-ph{width:36px;height:36px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bor);overflow:hidden}
+.ki-av-img{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);display:block}
 .ki-info{flex:1;min-width:0}
-.ki-name{font-size:11px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;line-height:1.2}
-.ki-elo{font-size:11px;font-weight:700;color:var(--o);line-height:1.2;margin-top:2px}
-.ki-stats{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap}
+.ki-name{font-size:13px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.ki-elo{font-size:13px;font-weight:700;color:var(--o);flex-shrink:0}
+.ki-stats{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
 .st{font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;line-height:1.4;white-space:nowrap}
 .st-t{background:#f0ece6;color:var(--mid)}
 .st-w{background:#d4efdf;color:#1a5c35}
@@ -473,11 +473,8 @@ function bK(){
     html+='<div class="lbl">Klassement</div><div class="empty">Nog geen wedstrijden.<br>Tik op de groene knop!</div>';
     return html;
   }
-  var half=Math.ceil(act.length/2);
-  var left=act.slice(0,half).map(function(p,i){return kiCard(p,i+1)}).join('');
-  var right=act.slice(half).map(function(p,i){return kiCard(p,half+i+1)}).join('');
   html+='<div class="lbl">'+act.length+' actieve spelers</div>';
-  html+='<div class="kcols"><div class="kcol">'+left+'</div><div class="kcol">'+right+'</div></div>';
+  html+='<div class="kcols">'+act.map(function(p,i){return kiCard(p,i+1)}).join('')+'</div>';
   return html;
 }
 
