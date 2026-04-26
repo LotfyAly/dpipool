@@ -118,6 +118,17 @@ input:focus{border-color:var(--o)}
 select{width:100%;padding:11px 12px;border-radius:var(--rad);border:1.5px solid var(--bor);background:#fff;color:var(--n);font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238fa3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:32px}
 select:focus{border-color:var(--o)}
 #toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--n);color:#fff;padding:9px 20px;border-radius:24px;font-size:13px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;z-index:100;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .15s}
+.modal-box{background:white;border-radius:16px 16px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;animation:slideUp .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-icon{width:52px;height:52px;border-radius:50%;background:#fce4e4;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:22px}
+.modal-title{font-size:17px;font-weight:700;color:var(--n);text-align:center;margin-bottom:8px}
+.modal-msg{font-size:14px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:22px}
+.modal-btn-row{display:flex;gap:10px}
+.modal-cancel{flex:1;padding:13px;border-radius:var(--rad);border:1.5px solid var(--bor);background:white;color:var(--n);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+.modal-confirm{flex:1;padding:13px;border-radius:var(--rad);border:none;background:#c0392b;color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
 </style>
 </head>
 <body>
@@ -155,6 +166,18 @@ select:focus{border-color:var(--o)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Spelers<div class="nd"></div>
     </button>
   </div>
+
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-icon">&#128465;&#65039;</div>
+    <div class="modal-title" id="modal-title">Speler verwijderen</div>
+    <div class="modal-msg" id="modal-msg">Weet je het zeker?</div>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closeModal()">Annuleer</button>
+      <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmModal()">Definitief verwijderen</button>
+    </div>
+  </div>
+</div>
 </div>
 <div id="toast"></div>
 
@@ -171,7 +194,7 @@ function sorted(){return S.players.slice().sort(function(a,b){return b.elo-a.elo
 function active(){return sorted().filter(function(p){return p.wins+p.losses>0})}
 function find(id){for(var i=0;i<S.players.length;i++){if(S.players[i].id===id)return S.players[i]}return null}
 function getActiveQueue(){return S.queue.filter(function(q){return q.status==='wachtend'||q.status==='aan_de_beurt'})}
-function getPhoto(pid){try{return localStorage.getItem('photo_'+pid)}catch(e){return null}}
+// getPhoto moved above
 function weekDelta(pid){var w=Date.now()-7*24*60*60*1000;return S.matches.filter(function(m){return new Date(m.date)>=w&&(m.wid===pid||m.lid===pid)}).reduce(function(s,m){return m.wid===pid?s+m.d:s-m.d},0)}
 function arrow(pid){var d=weekDelta(pid);if(d>0)return'<span style="color:#27ae60;font-size:10px;font-weight:800;margin-left:2px">&#9650;</span>';if(d<0)return'<span style="color:#e74c3c;font-size:10px;font-weight:800;margin-left:2px">&#9660;</span>';return''}
 function streak(pid){var ms=S.matches.filter(function(m){return m.wid===pid||m.lid===pid}).sort(function(a,b){return new Date(a.date)-new Date(b.date)});var mx=0,c=0;ms.forEach(function(m){if(m.wid===pid){c++;if(c>mx)mx=c}else c=0});return mx}
@@ -346,11 +369,16 @@ async function addP(){
 }
 async function delP(id){
   var p=find(id);if(!p)return;
-  if(p.wins+p.losses>0&&!confirm(p.name+' verwijderen?'))return;
-  try{
-    await Promise.all([db.from('matches').delete().or('winner_id.eq.'+id+',loser_id.eq.'+id),db.from('players').delete().eq('id',id)]);
-    await dbLoad();S.selP=null;toast(p.name+' verwijderd');render();
-  }catch(e){toast('Fout: '+e.message)}
+  var msg = p.wins+p.losses > 0
+    ? 'Dit verwijdert het profiel van '+p.name+' definitief, inclusief alle '+( p.wins+p.losses)+' gespeelde wedstrijden. Dit kan niet ongedaan worden gemaakt.'
+    : 'Weet je zeker dat je '+p.name+' wilt verwijderen? Dit kan niet ongedaan worden gemaakt.';
+  showModal('Speler verwijderen', msg, 'Definitief verwijderen', async function(){
+    try{
+      await removePhoto(id);
+      await Promise.all([db.from('matches').delete().or('winner_id.eq.'+id+',loser_id.eq.'+id),db.from('players').delete().eq('id',id)]);
+      await dbLoad();S.selP=null;toast(p.name+' verwijderd');render();
+    }catch(e){toast('Fout: '+e.message)}
+  });
 }
 function filterP(q){
   var el=document.getElementById('plist');if(!el)return;
@@ -365,16 +393,7 @@ function filterP(q){
   }).join('')||'<div class="empty">Niet gevonden</div>';
 }
 
-// ── Photo upload ──────────────────────────────────────────────
-function uploadPhoto(pid){var inp=document.getElementById('photo-inp-'+pid);if(inp)inp.click()}
-function handlePhotoUpload(input,pid){
-  var file=input.files[0];if(!file)return;
-  if(file.size>2*1024*1024){toast('Foto mag max 2MB zijn');return}
-  var reader=new FileReader();
-  reader.onload=function(e){try{localStorage.setItem('photo_'+pid,e.target.result)}catch(ex){toast('Opslaan mislukt');}toast('Foto opgeslagen!');render();};
-  reader.readAsDataURL(file);
-}
-function removePhoto(pid){try{localStorage.removeItem('photo_'+pid)}catch(e){}toast('Foto verwijderd');render()}
+// Photo functions moved above
 
 // ── ELO chart ────────────────────────────────────────────────
 function eloChart(pid){
@@ -665,6 +684,99 @@ function bP(){
   return html2;
 }
 
+// ── Modal ─────────────────────────────────────────────────────
+var _modalCallback = null;
+function showModal(title, msg, confirmLabel, cb){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal-confirm-btn').textContent = confirmLabel||'Bevestig';
+  _modalCallback = cb;
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModal(){
+  document.getElementById('modal-overlay').style.display = 'none';
+  _modalCallback = null;
+}
+function confirmModal(){
+  closeModal();
+  if(_modalCallback) _modalCallback();
+}
+
+// ── Photo storage via Supabase ────────────────────────────────
+var _photoCache = {};
+
+async function loadPhotoUrls(){
+  // Load public URLs for all players - check which files exist
+  _photoCache = {};
+  try{
+    var r = await db.storage.from('player-photos').list('', {limit:500});
+    if(r.data){
+      r.data.forEach(function(f){
+        var pid = f.name.replace(/\.[^.]+$/,'');
+        var url = db.storage.from('player-photos').getPublicUrl(f.name).data.publicUrl;
+        _photoCache[pid] = url + '?t=' + f.updated_at;
+      });
+    }
+  }catch(e){ /* Storage not set up yet, fall back to localStorage */ }
+}
+
+function getPhoto(pid){
+  // Try Supabase cache first, then localStorage fallback
+  if(_photoCache[pid]) return _photoCache[pid];
+  try{return localStorage.getItem('photo_'+pid)}catch(e){return null}
+}
+
+function uploadPhoto(pid){
+  var inp = document.getElementById('photo-inp-'+pid);
+  if(inp) inp.click();
+}
+
+async function handlePhotoUpload(input, pid){
+  var file = input.files[0]; if(!file) return;
+  if(file.size > 3*1024*1024){toast('Foto mag max 3MB zijn'); return}
+  toast('Uploaden...');
+  try{
+    // Determine extension
+    var ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    var filename = pid + '.' + ext;
+    // Remove old files for this player first
+    var existing = await db.storage.from('player-photos').list('',{search:pid});
+    if(existing.data && existing.data.length){
+      await db.storage.from('player-photos').remove(existing.data.map(function(f){return f.name}));
+    }
+    // Upload new
+    var r = await db.storage.from('player-photos').upload(filename, file, {upsert:true, contentType:file.type});
+    if(r.error) throw r.error;
+    var url = db.storage.from('player-photos').getPublicUrl(filename).data.publicUrl;
+    _photoCache[pid] = url + '?t=' + Date.now();
+    toast('Foto opgeslagen! &#128247;');
+    render();
+  }catch(e){
+    // Fallback to localStorage if storage not configured
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      try{localStorage.setItem('photo_'+pid, ev.target.result)}catch(ex){}
+      _photoCache[pid] = ev.target.result;
+      toast('Foto opgeslagen!');
+      render();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function removePhoto(pid){
+  try{
+    var existing = await db.storage.from('player-photos').list('',{search:pid});
+    if(existing.data && existing.data.length){
+      await db.storage.from('player-photos').remove(existing.data.map(function(f){return f.name}));
+    }
+  }catch(e){}
+  delete _photoCache[pid];
+  try{localStorage.removeItem('photo_'+pid)}catch(e){}
+  toast('Foto verwijderd');
+  render();
+}
+
 // ── Render ────────────────────────────────────────────────────
 function render(){
   var ct=document.getElementById('ct');if(ct)ct.textContent=S.matches.length?S.matches.length+'x':'';
@@ -692,7 +804,7 @@ async function init(){
     db=_sb.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     await dbSeed();
     await dbLoad();
-    await dbLoadQueue();
+    await Promise.all([dbLoadQueue(), loadPhotoUrls()]);
     setupRealtime();
     hideLoad();
     render();
