@@ -6,7 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#1c2f4a">
+<meta name="theme-color" content="#0f1410">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <meta property="og:title" content="dpi Pool Klassement 🎱">
 <meta property="og:description" content="Bekijk het live ELO-klassement van de dpi pooltafel. Wie staat er bovenaan?">
 <meta property="og:type" content="website">
@@ -18,117 +21,223 @@ const SUPABASE_ANON_KEY = 'sb_publishable_gz42ihuz2TFp9b-G5HA1Sw_V-nwCKX3';
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 html{height:100%;-webkit-text-size-adjust:100%}
-body{height:100%;margin:0;padding:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f4f1ec;-webkit-font-smoothing:antialiased}
+body{height:100%;margin:0;padding:0;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f6f5f2;color:#1a1a17;-webkit-font-smoothing:antialiased;font-feature-settings:'cv11','ss01','ss03'}
 *{-webkit-box-sizing:border-box;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--n:#1c2f4a;--o:#e8681e;--ol:#fce9d8;--od:#b85315;--g:#27ae60;--gd:#1e8449;--gl:#d5f5e3;--cr:#f4f1ec;--mid:#8fa3b8;--bor:#ddd8cf;--rad:11px}
-#loading{position:fixed;inset:0;background:var(--n);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
-#loading p{color:white;font-size:14px;opacity:.7;margin:0;text-align:center;padding:0 20px}
-.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--o);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-#cfg{display:none;position:fixed;inset:0;background:var(--n);align-items:center;justify-content:center;z-index:998;padding:24px}
-#cfg .box{background:white;border-radius:12px;padding:24px;max-width:360px;text-align:center}
-#app{display:flex;flex-direction:column;width:100%;height:100vh;height:-webkit-fill-available;background:var(--cr);overflow:hidden}
-.top{padding:0 16px;height:54px;min-height:54px;display:flex;align-items:center;gap:10px;background:var(--n);flex-shrink:0;position:relative;overflow:hidden}
-.top::after{content:'';position:absolute;right:-18px;top:-18px;width:96px;height:96px;border:18px solid rgba(255,255,255,.06);border-radius:50%;pointer-events:none}
-.top h1{font-size:15px;font-weight:600;color:#fff;flex:1;margin:0}
-.top-ct{font-size:11px;color:rgba(255,255,255,.4);flex-shrink:0}
-.cnt{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 12px 8px;min-height:0;-webkit-overflow-scrolling:touch}
-.nav{background:#fff;border-top:1px solid var(--bor);flex-shrink:0;display:flex;align-items:flex-end;height:64px;padding:0 2px}
-.nb{flex:1;padding:7px 1px 9px;border:none;background:none;cursor:pointer;font-size:8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:.05em;-webkit-appearance:none;appearance:none;position:relative}
-.nb.a{color:var(--o)}.nb svg{width:18px;height:18px;stroke-width:1.8}
-.nd{width:4px;height:4px;border-radius:50%;background:var(--o);opacity:0;margin-top:1px}.nb.a .nd{opacity:1}
-.nc{display:flex;flex-direction:column;align-items:center;flex:0 0 68px}
-.fab{width:56px;height:56px;border-radius:50%;background:var(--g);border:4px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 14px rgba(39,174,96,.38);position:relative;top:-15px;margin-bottom:2px;transition:background .15s,transform .1s}
-.fab:active{transform:scale(.93)}
-.fab svg{width:24px;height:24px;stroke:#fff;stroke-width:2.5;fill:none}
-.fl{font-size:8px;font-weight:700;color:var(--gd);letter-spacing:.05em;text-transform:uppercase;margin-top:-10px}
-.q-badge{position:absolute;top:5px;right:4px;background:var(--o);color:#fff;border-radius:10px;font-size:8px;font-weight:800;padding:1px 4px;min-width:14px;text-align:center;line-height:1.4}
-/* Cards */
-.card{background:#fff;border-radius:var(--rad);padding:14px;margin-bottom:10px;border:1px solid var(--bor);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--n);opacity:.45;margin-bottom:9px;text-transform:uppercase}
-.plbl{font-size:10px;font-weight:700;color:var(--n);opacity:.55;margin-bottom:5px;text-transform:uppercase;letter-spacing:.07em}
-/* Two-column ranking */
-.kcols{display:flex;flex-direction:column;gap:4px}
-.kcol{display:contents}
-.ki{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--rad);cursor:pointer;background:#fff;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:border-color .12s}
-.ki:active{border-color:var(--ol)}
-.ki-num{font-size:12px;font-weight:700;color:var(--mid);width:22px;text-align:right;flex-shrink:0}
-.t1{color:#c8a020;font-size:13px}.t2{color:#909090;font-size:13px}.t3{color:#a0623a;font-size:13px}
-.ki-av-wrap{width:44px;height:44px;flex-shrink:0}
-.ki-av-ph{width:44px;height:44px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bor);overflow:hidden}
-.ki-av-img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);display:block}
-.ki-info{flex:1;min-width:0}
-.ki-name{font-size:13px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.ki-elo{font-size:13px;font-weight:700;color:var(--o);flex-shrink:0}
-.ki-stats{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
-.st{font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;line-height:1.4;white-space:nowrap}
-.st-t{background:#f0ece6;color:var(--mid)}
-.st-w{background:#d4efdf;color:#1a5c35}
-.st-l{background:#fad7d7;color:#c0392b}
-.st-p{background:var(--ol);color:var(--od)}
-/* Standard list items */
-.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:var(--ol);color:var(--od)}
-.rii{flex:1;min-width:0}
-.rname{font-size:13px;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.rsub{font-size:11px;color:var(--mid);margin-top:2px}
-.elo{font-size:14px;font-weight:700;color:var(--o);flex-shrink:0}
-.pi{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--rad);cursor:pointer;background:#fff;margin-bottom:4px;border:1px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:border-color .12s}
-.pi:active{border-color:var(--ol)}
-/* Buttons */
-.btn{width:100%;padding:13px;border-radius:var(--rad);border:none;background:var(--o);color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;transition:background .15s,transform .1s}
-.btn:active{background:var(--od);transform:scale(.98)}
-.btn:disabled{opacity:.4;cursor:default}
-.btn-dark{background:var(--n)}.btn-dark:active{background:#0f1e2e}
-.obtn{padding:11px 16px;border-radius:var(--rad);border:1.5px solid var(--bor);background:#fff;color:var(--n);font-size:14px;font-family:inherit;cursor:pointer;font-weight:600;-webkit-appearance:none;appearance:none}
-.dbtn{padding:8px 13px;border-radius:var(--rad);border:1px solid #fad4d4;background:#fff8f8;color:#c0392b;font-size:12px;font-family:inherit;cursor:pointer;font-weight:600;-webkit-appearance:none;appearance:none}
-/* Winner buttons */
-.wr{display:flex;gap:8px;margin-bottom:13px}
-.wb{flex:1;padding:12px 6px;border-radius:var(--rad);border:1.5px solid var(--bor);background:#fff;cursor:pointer;font-size:13px;color:var(--mid);font-family:inherit;text-align:center;font-weight:600;transition:all .15s;-webkit-appearance:none;appearance:none;line-height:1.3}
-.wb.s{background:var(--ol);border-color:var(--o);color:var(--n)}
-/* Picker */
-.pp{display:flex;align-items:center;padding:11px 13px;border-radius:var(--rad);border:1.5px solid var(--bor);background:#fff;cursor:pointer;min-height:44px;transition:border-color .15s,background .15s}
-.pp.f{border-color:var(--o);background:var(--ol)}
-/* Match / misc */
-.mi{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0ece6}
-.mi:last-child{border-bottom:none}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
-.bw{background:#d4efdf;color:#1a5c35}.bl{background:#fad7d7;color:#7b1d1d}
-.ub{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--bor);border-radius:var(--rad);padding:9px 11px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.ubtn{font-size:11px;color:var(--od);background:var(--ol);border:none;border-radius:7px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:700;-webkit-appearance:none;appearance:none}
-/* Confirm view */
-.cw{display:flex;flex-direction:column;align-items:center;padding:20px 16px;text-align:center}
-.cc{display:flex;gap:10px;margin-bottom:20px;width:100%}
-.cx{flex:1;background:#fff;border-radius:var(--rad);padding:12px 10px;border:1px solid var(--bor);text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-/* Stats highlights */
-.sh{background:#fff;border-radius:var(--rad);padding:13px;border:1px solid var(--bor);margin-bottom:7px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.si{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
-/* Stat grid */
-.sg{display:flex;gap:7px;margin-bottom:10px}
-.sb{flex:1;background:#fff;border-radius:var(--rad);padding:11px 8px;text-align:center;border:1px solid var(--bor)}
-/* Back button */
-.back{display:flex;align-items:center;gap:6px;color:var(--o);font-size:13px;cursor:pointer;margin-bottom:14px;background:none;border:none;font-family:inherit;padding:0;font-weight:700;-webkit-appearance:none;appearance:none}
-/* Misc */
-.empty{text-align:center;color:var(--mid);padding:28px 16px;font-size:14px;line-height:1.7}
-.div{height:1px;background:var(--bor);margin:12px 0}
-.sh-hdr{background:var(--cr);padding:12px 14px 8px;margin:-14px -14px 0;position:-webkit-sticky;position:sticky;top:-14px;z-index:2}
-.ar{display:flex;gap:8px}.ar input{flex:1}
-input[type=text],input[type=search]{width:100%;padding:11px 12px;border-radius:var(--rad);border:1.5px solid var(--bor);background:#fff;color:var(--n);font-size:15px;font-family:inherit;transition:border-color .15s;-webkit-appearance:none;appearance:none;outline:none}
-input[type=search]::-webkit-search-decoration,input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
-input:focus{border-color:var(--o)}
-select{width:100%;padding:11px 12px;border-radius:var(--rad);border:1.5px solid var(--bor);background:#fff;color:var(--n);font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238fa3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:32px}
-select:focus{border-color:var(--o)}
-#toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%);background:var(--n);color:#fff;padding:9px 20px;border-radius:24px;font-size:13px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;z-index:100;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+:root{
+  /* surfaces — dpi inspired: warm off-white, soft hex-pattern neutrals */
+  --bg:#f5f3ee;
+  --surface:#ffffff;
+  --surface-2:#faf7f1;
+  --line:#e8e3d8;
+  --line-2:#efebe1;
+  /* ink — dpi deep ink */
+  --ink:#1b1d1f;
+  --ink-2:#3a3d40;
+  --mute:#878a8d;
+  --faint:#b8b9bb;
+  /* accent — dpi orange (subtle) */
+  --felt:#e85d1a;          /* primary orange */
+  --felt-d:#c84a0e;        /* deeper orange (pressed) */
+  --felt-l:#fdece1;        /* tinted orange wash */
+  --action:#e85d1a;
+  --action-l:#fdece1;
+  --pos:#2f6f4d;
+  --pos-l:#e3eee8;
+  --neg:#a8341d;
+  --neg-l:#f5e2dc;
+  --gold:#c08a2a;
+  /* shape */
+  --r:10px;
+  --r-sm:6px;
+  --r-lg:14px;
+  /* legacy aliases used in inline html below */
+  --n:var(--ink);
+  --o:var(--action);
+  --ol:var(--action-l);
+  --od:#9a3309;
+  --g:var(--felt);
+  --gd:var(--felt-d);
+  --gl:var(--felt-l);
+  --cr:var(--bg);
+  --mid:var(--mute);
+  --bor:var(--line);
+  --rad:var(--r);
+}
+.mono{font-family:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;font-variant-numeric:tabular-nums}
+.tnum{font-variant-numeric:tabular-nums}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .15s}
-.modal-box{background:white;border-radius:16px 16px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;animation:slideUp .2s}
+/* Loading + config */
+#loading{position:fixed;inset:0;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:18px}
+#loading p{color:rgba(255,255,255,.6);font-size:13px;margin:0;text-align:center;padding:0 20px;letter-spacing:.01em}
+.spin{width:28px;height:28px;border:2px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#cfg{display:none;position:fixed;inset:0;background:var(--ink);align-items:center;justify-content:center;z-index:998;padding:24px}
+#cfg .box{background:white;border-radius:var(--r-lg);padding:24px;max-width:360px;text-align:center}
+
+/* Shell */
+#app{display:flex;flex-direction:column;width:100%;height:100vh;height:-webkit-fill-available;background:var(--bg);overflow:hidden}
+
+/* Top bar — dpi deep purple */
+.top{padding:0 16px;height:52px;min-height:52px;display:flex;align-items:center;gap:10px;background:#2a1a3e;flex-shrink:0;position:relative;border-bottom:1px solid #1a0f29}
+.top h1{font-size:14px;font-weight:600;color:#f5f1ec;flex:1;margin:0;letter-spacing:-0.01em}
+.top h1 .dim{color:rgba(245,241,236,.55);font-weight:500}
+.top-ct{font-size:11px;color:rgba(245,241,236,.6);flex-shrink:0;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.eight{width:22px;height:22px;flex-shrink:0;display:block}
+
+.cnt{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 14px 12px;min-height:0;-webkit-overflow-scrolling:touch;background-color:var(--bg);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='64' viewBox='0 0 56 64'><g fill='none' stroke='%231b1d1f' stroke-opacity='0.045' stroke-width='1'><polygon points='28,2 53,16 53,46 28,60 3,46 3,16'/><polygon points='28,18 41,25 41,39 28,46 15,39 15,25'/></g></svg>");background-size:56px 64px;background-repeat:repeat;background-attachment:local}
+
+/* Bottom nav */
+.nav{background:var(--surface);border-top:1px solid var(--line);flex-shrink:0;display:flex;align-items:stretch;height:62px;padding:0;padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;padding:8px 1px 9px;border:none;background:none;cursor:pointer;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:inherit;font-weight:500;color:var(--mute);letter-spacing:.005em;-webkit-appearance:none;appearance:none;position:relative;transition:color .15s}
+.nb.a{color:var(--ink)}
+.nb svg{width:20px;height:20px;stroke-width:1.6}
+.nb.a svg{stroke-width:1.9}
+.nd{display:none}
+.nc{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 78px;background:var(--surface)}
+.fab{width:48px;height:48px;border-radius:50%;background:var(--felt);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 16px -4px rgba(232,93,26,.45);transition:transform .12s,background .15s}
+.fab:active{transform:scale(.94)}
+.fab svg{width:22px;height:22px;stroke:#fff;stroke-width:2;fill:none}
+.fl{font-size:10px;font-weight:500;color:var(--mute);letter-spacing:.005em;margin-top:5px}
+.q-badge{position:absolute;top:6px;right:calc(50% - 17px);background:var(--ink);color:#fff;border-radius:8px;font-size:9px;font-weight:600;padding:1px 4px;min-width:14px;text-align:center;line-height:1.4;letter-spacing:.02em}
+
+/* Cards */
+.card{background:var(--surface);border-radius:var(--r);padding:14px;margin-bottom:10px;border:1px solid var(--line);box-shadow:none}
+.lbl{font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--mute);margin-bottom:10px;text-transform:none}
+.plbl{font-size:11px;font-weight:500;color:var(--mute);margin-bottom:6px;letter-spacing:.02em;text-transform:none}
+
+/* Ranking list */
+.kcols{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.ki{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;background:var(--surface);border:none;border-bottom:1px solid var(--line-2);box-shadow:none;transition:background .12s;position:relative}
+.kcols .ki:last-child{border-bottom:none}
+.ki-mid{display:flex;align-items:center;gap:10px;padding:6px 14px;background:var(--surface-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:9.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.ki-mid::before,.ki-mid::after{content:"";flex:1;height:1px;background:var(--line)}
+.ki-mid span{padding:0 2px}
+.ki:active{background:var(--surface-2)}
+.ki-num{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;font-weight:500;color:var(--mute);width:22px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.t1{font-size:38px;font-weight:600;line-height:1;letter-spacing:0;width:auto}
+.t2{font-size:30px;font-weight:600;line-height:1;letter-spacing:0;width:auto}
+.t3{font-size:24px;font-weight:600;line-height:1;letter-spacing:0;width:auto}
+.t1{color:var(--gold)} .t2{color:#7a7d80} .t3{color:#9a6a45}
+.ki-num.tlast{font-size:30px;letter-spacing:0;color:inherit;width:auto;line-height:1}
+.qcoin{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ki-av-wrap{width:46px;height:46px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ki.top3 .ki-av-wrap{width:58px;height:58px}
+.ki.r1{padding:18px 14px}
+.ki.r2{padding:15px 14px}
+.ki.r3{padding:13px 14px}
+.ki.r1 .ki-av-wrap{width:72px;height:72px}
+.ki.r2 .ki-av-wrap{width:62px;height:62px}
+.ki.r3 .ki-av-wrap{width:54px;height:54px}
+.ki.r1 .ki-name{font-size:18px;font-weight:600}
+.ki.r2 .ki-name{font-size:16px;font-weight:600}
+.ki.r3 .ki-name{font-size:15px;font-weight:550}
+.ki.r1 .ki-elo{font-size:18px}
+.ki.r2 .ki-elo{font-size:16px}
+.ki.r3 .ki-elo{font-size:15px}
+.ki.r1 .ki-name-row2{font-size:12px}
+.ki.r2 .ki-name-row2{font-size:11.5px}
+.ki.r1 .ki-num,.ki.r2 .ki-num,.ki.r3 .ki-num{font-size:13px}
+.ki-av-ph{width:46px;height:46px;border-radius:50%;background:var(--line-2);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);overflow:hidden}
+.ki-av-img{width:46px;height:46px;border-radius:50%;object-fit:cover;display:block}
+.ki-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ki-name{font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;letter-spacing:-.005em;display:flex;align-items:center;gap:6px}
+.ki-name-row2{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);font-weight:500;font-variant-numeric:tabular-nums}
+.ki-name-row2 .dot{width:2px;height:2px;border-radius:50%;background:var(--faint)}
+.ki-elo{font-size:14px;font-weight:600;color:var(--ink);flex-shrink:0;font-variant-numeric:tabular-nums;letter-spacing:-.01em;font-family:'JetBrains Mono',ui-monospace,monospace}
+.ki-stats{display:none}
+
+/* Standard list items */
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;background:var(--line-2);color:var(--ink-2);letter-spacing:.02em}
+.rii{flex:1;min-width:0}
+.rname{font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;letter-spacing:-.005em}
+.rsub{font-size:11px;color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
+.elo{font-size:14px;font-weight:600;color:var(--ink);flex-shrink:0;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',ui-monospace,monospace}
+.pi{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r);cursor:pointer;background:var(--surface);margin-bottom:0;border:1px solid var(--line);box-shadow:none;transition:background .12s;margin-bottom:6px}
+.pi:active{background:var(--surface-2)}
+.pi-lg{gap:13px;padding:13px 14px;margin-bottom:7px}
+.pi-lg .rname{font-size:15px}
+.pi-lg .rsub{font-size:12px;margin-top:3px}
+
+/* Buttons */
+.btn{width:100%;padding:13px;border-radius:var(--r);border:none;background:var(--ink);color:#fff;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none;transition:background .15s,transform .1s;letter-spacing:.005em}
+.btn:active{background:#000;transform:scale(.99)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn-dark{background:var(--felt)}
+.btn-dark:active{background:var(--felt-d)}
+.obtn{padding:11px 16px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;cursor:pointer;font-weight:500;-webkit-appearance:none;appearance:none}
+.dbtn{padding:7px 11px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--neg);font-size:12px;font-family:inherit;cursor:pointer;font-weight:500;-webkit-appearance:none;appearance:none}
+
+/* Winner toggle */
+.wr{display:flex;gap:8px;margin-bottom:14px}
+.wb{flex:1;padding:13px 8px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:13px;color:var(--ink-2);font-family:inherit;text-align:center;font-weight:500;transition:all .15s;-webkit-appearance:none;appearance:none;line-height:1.3;letter-spacing:-.005em}
+.wb.s{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* Picker */
+.pp{display:flex;align-items:center;padding:12px 13px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer;min-height:46px;transition:border-color .15s,background .15s}
+.pp.f{border-color:var(--ink);background:var(--surface)}
+
+/* Match list / misc */
+.mi{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line-2)}
+.mi:last-child{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;letter-spacing:.005em}
+.bw{background:var(--pos-l);color:var(--pos)}
+.bl{background:var(--neg-l);color:var(--neg)}
+
+.ub{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;box-shadow:none}
+.ubtn{font-size:12px;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer;font-family:inherit;font-weight:500;-webkit-appearance:none;appearance:none}
+
+/* Confirm view */
+.cw{display:flex;flex-direction:column;align-items:center;padding:8px 4px 16px;text-align:center}
+.cc{display:flex;gap:10px;margin-bottom:18px;width:100%}
+.cx{flex:1;background:var(--surface);border-radius:var(--r);padding:16px 12px;border:1px solid var(--line);text-align:center;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.cx>img,.cx>div:first-child{margin-bottom:4px}
+
+/* Stats highlight */
+.sh{background:var(--surface);border-radius:var(--r);padding:14px;border:1px solid var(--line);margin-bottom:8px;display:flex;align-items:center;gap:14px;box-shadow:none}
+.si{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--surface-2);border:1px solid var(--line)}
+
+/* Stat grid */
+.sg{display:flex;gap:8px;margin-bottom:10px}
+.sb{flex:1;background:var(--surface);border-radius:var(--r);padding:14px 8px;text-align:center;border:1px solid var(--line)}
+
+/* Back button */
+.back{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:13px;cursor:pointer;margin-bottom:16px;background:none;border:none;font-family:inherit;padding:0;font-weight:500;-webkit-appearance:none;appearance:none}
+.back:active{opacity:.7}
+
+/* Misc */
+.empty{text-align:center;color:var(--mute);padding:32px 16px;font-size:13px;line-height:1.7}
+.div{height:1px;background:var(--line);margin:16px 0}
+.sh-hdr{background:var(--bg);padding:14px 14px 10px;margin:-18px -14px 0;position:-webkit-sticky;position:sticky;top:-18px;z-index:2;border-bottom:1px solid var(--line)}
+.ar{display:flex;gap:8px}.ar input{flex:1}
+
+input[type=text],input[type=search]{width:100%;padding:11px 12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;transition:border-color .15s;-webkit-appearance:none;appearance:none;outline:none}
+input[type=search]::-webkit-search-decoration,input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
+input:focus{border-color:var(--ink)}
+select{width:100%;padding:11px 12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;-webkit-appearance:none;appearance:none;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8d90' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+select:focus{border-color:var(--ink)}
+
+#toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;pointer-events:none;opacity:0;transition:opacity .25s;white-space:nowrap;z-index:100;font-weight:500;box-shadow:0 8px 24px -6px rgba(0,0,0,.35);letter-spacing:.005em}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(15,16,17,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .15s}
+.modal-box{background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:24px 20px 32px;width:100%;max-width:480px;animation:slideUp .2s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-icon{width:52px;height:52px;border-radius:50%;background:#fce4e4;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:22px}
-.modal-title{font-size:17px;font-weight:700;color:var(--n);text-align:center;margin-bottom:8px}
-.modal-msg{font-size:14px;color:var(--mid);text-align:center;line-height:1.6;margin-bottom:22px}
-.modal-btn-row{display:flex;gap:10px}
-.modal-cancel{flex:1;padding:13px;border-radius:var(--rad);border:1.5px solid var(--bor);background:white;color:var(--n);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
-.modal-confirm{flex:1;padding:13px;border-radius:var(--rad);border:none;background:#c0392b;color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+.modal-icon{width:44px;height:44px;border-radius:10px;background:var(--neg-l);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:18px}
+.modal-title{font-size:16px;font-weight:600;color:var(--ink);text-align:center;margin-bottom:6px;letter-spacing:-.01em}
+.modal-msg{font-size:13px;color:var(--mute);text-align:center;line-height:1.6;margin-bottom:22px}
+.modal-btn-row{display:flex;gap:8px}
+.modal-cancel{flex:1;padding:12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+.modal-confirm{flex:1;padding:12px;border-radius:var(--r);border:none;background:var(--neg);color:white;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;-webkit-appearance:none;appearance:none}
+
+/* Queue chip used inline */
+.qchip{display:inline-flex;align-items:center;gap:4px;font-size:10px;background:var(--felt);color:#fff;padding:2px 7px;border-radius:4px;font-weight:500;letter-spacing:.01em}
+.qchip-2{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--mute);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* Trend arrows */
+.trend-up{color:#3aa86b;font-size:10px;font-weight:600;letter-spacing:.02em;line-height:1}
+.trend-dn{color:var(--neg);font-size:10px;font-weight:600;letter-spacing:.02em;line-height:1}
+.ki-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.ki-right:empty{display:none}
 </style>
 </head>
 <body>
@@ -136,40 +245,37 @@ select:focus{border-color:var(--o)}
 <div id="cfg" style="display:none"><div class="box"><h2>⚙️ Configuratie</h2><p>Vul Supabase URL en key in bovenaan het bestand.</p></div></div>
 <div id="app" style="display:none">
   <div class="top">
-    <svg width="28" height="28" viewBox="0 0 40 40" style="flex-shrink:0">
-      <circle cx="20" cy="20" r="19" fill="#111"/><circle cx="20" cy="17" r="10" fill="white"/>
-      <circle cx="20" cy="17" r="5" fill="#111"/>
-      <text x="20" y="20.5" text-anchor="middle" font-size="7" font-weight="700" fill="white" font-family="sans-serif">8</text>
+    <svg class="eight" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="11" fill="#15171a"/>
+      <circle cx="12" cy="12" r="6" fill="#fff"/>
+      <text x="12" y="15.2" text-anchor="middle" font-size="7" font-weight="700" fill="#15171a" font-family="Inter, sans-serif">8</text>
     </svg>
-    <h1>dpi Pool</h1>
+    <h1>dpi Pool <span class="dim">/ Klassement</span></h1>
     <span class="top-ct" id="ct"></span>
   </div>
   <div class="cnt" id="mc"></div>
   <div class="nav">
     <button class="nb a" id="nk" onclick="go('k')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Klassement<div class="nd"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V10"/><path d="M12 20V4"/><path d="M18 20v-7"/></svg>Klassement
     </button>
-    <button class="nb" id="nq" onclick="go('q')" style="position:relative">
-      <span style="font-size:18px;line-height:1">&#129689;</span>
-      Wachtrij<div class="nd"></div><span id="qbadge" style="display:none" class="q-badge"></span>
-    </button>
+
     <div class="nc">
-      <div class="fab" id="fab" onclick="go('w')">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      </div>
+      <button class="fab" id="fab" onclick="go('w')" aria-label="Nieuwe wedstrijd">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="6" x2="12" y2="18"/><line x1="6" y1="12" x2="18" y2="12"/></svg>
+      </button>
       <span class="fl">Wedstrijd</span>
     </div>
     <button class="nb" id="ns" onclick="go('s')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="12" width="4" height="10"/><rect x="9" y="6" width="4" height="16"/><rect x="16" y="2" width="4" height="20"/></svg>Stats<div class="nd"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M7 20v-7"/><path d="M12 20V8"/><path d="M17 20v-4"/></svg>Stats
     </button>
     <button class="nb" id="np" onclick="go('p')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Spelers<div class="nd"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="9" r="3.5"/><path d="M3 19c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/><circle cx="17" cy="8" r="2.5"/><path d="M15 19c0-2.5 1.8-4.5 4-4.5"/></svg>Spelers
     </button>
   </div>
 
 <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal()">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-icon">&#128465;&#65039;</div>
+    <div class="modal-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9b2c2c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></div>
     <div class="modal-title" id="modal-title">Speler verwijderen</div>
     <div class="modal-msg" id="modal-msg">Weet je het zeker?</div>
     <div class="modal-btn-row">
@@ -196,7 +302,7 @@ function find(id){for(var i=0;i<S.players.length;i++){if(S.players[i].id===id)re
 function getActiveQueue(){return S.queue.filter(function(q){return q.status==='wachtend'||q.status==='aan_de_beurt'})}
 // getPhoto moved above
 function weekDelta(pid){var w=Date.now()-7*24*60*60*1000;return S.matches.filter(function(m){return new Date(m.date)>=w&&(m.wid===pid||m.lid===pid)}).reduce(function(s,m){return m.wid===pid?s+m.d:s-m.d},0)}
-function arrow(pid){var d=weekDelta(pid);if(d>0)return'<span style="color:#27ae60;font-size:10px;font-weight:800;margin-left:2px">&#9650;</span>';if(d<0)return'<span style="color:#e74c3c;font-size:10px;font-weight:800;margin-left:2px">&#9660;</span>';return''}
+function arrow(pid){var d=weekDelta(pid);if(d>0)return'<span class="trend-up">&#9650; '+d+'</span>';if(d<0)return'<span class="trend-dn">&#9660; '+Math.abs(d)+'</span>';return''}
 function streak(pid){var ms=S.matches.filter(function(m){return m.wid===pid||m.lid===pid}).sort(function(a,b){return new Date(a.date)-new Date(b.date)});var mx=0,c=0;ms.forEach(function(m){if(m.wid===pid){c++;if(c>mx)mx=c}else c=0});return mx}
 function h2h(a,b){var ms=S.matches.filter(function(m){return(m.wid===a&&m.lid===b)||(m.wid===b&&m.lid===a)});return{t:ms.length,aw:ms.filter(function(m){return m.wid===a}).length,bw:ms.filter(function(m){return m.wid===b}).length,ms:ms.slice(0,5)}}
 function toast(m){var t=document.getElementById('toast');t.innerHTML=m;t.style.opacity=1;setTimeout(function(){t.style.opacity=0},2800)}
@@ -296,6 +402,7 @@ async function ok(){
     ]);
     await dbLoad();
     await dbLoadQueue();
+    fireConfetti();
     var winId=m.wid,d=m.d,wn=m.wn;
     S.step='form';S.pend=null;S.wid=null;
     var nextInQueue=S.queue.length>0?find(S.queue[0].speler_id):null;
@@ -310,6 +417,34 @@ async function ok(){
   }catch(e){toast('Fout: '+e.message)}
 }
 function cancel(){S.step='form';S.pend=null;render()}
+
+// ── Confetti ─────────────────────────────────────────────────
+function fireConfetti(){
+  var host=document.getElementById('confetti-layer');
+  if(!host){host=document.createElement('div');host.id='confetti-layer';document.body.appendChild(host);}
+  var colors=['#e85d1a','#2a1a3e','#3aa86b','#c08a2a','#fff5dc','#a8341d','#ffffff'];
+  var N=80;
+  var W=window.innerWidth;
+  for(var i=0;i<N;i++){
+    var p=document.createElement('div');
+    p.className='confetti-piece';
+    var c=colors[i%colors.length];
+    var size=4+Math.random()*6;
+    var rot=Math.random()*360;
+    var x=W/2+(Math.random()-0.5)*60;
+    var dx=(Math.random()-0.5)*W*0.9;
+    var dy=window.innerHeight*0.65+Math.random()*window.innerHeight*0.25;
+    var dur=1100+Math.random()*900;
+    var delay=Math.random()*120;
+    var spin=(Math.random()*4-2)*720;
+    p.style.cssText='position:fixed;left:'+x+'px;top:-12px;width:'+size+'px;height:'+(size*1.6)+'px;background:'+c+';border-radius:1px;transform:rotate('+rot+'deg);opacity:.95;pointer-events:none;will-change:transform,opacity;z-index:9999';
+    host.appendChild(p);
+    p.animate([
+      {transform:'translate(0,0) rotate('+rot+'deg)',opacity:1},
+      {transform:'translate('+dx+'px,'+dy+'px) rotate('+(rot+spin)+'deg)',opacity:0}
+    ],{duration:dur,delay:delay,easing:'cubic-bezier(.2,.6,.4,1)',fill:'forwards'}).onfinish=function(el){return function(){el.remove();}}(p);
+  }
+}
 
 // ── Undo ─────────────────────────────────────────────────────
 async function undo(){
@@ -388,8 +523,8 @@ function filterP(q){
     var r=0;for(var i=0;i<s.length;i++){if(s[i].id===p.id){r=i+1;break}}
     var t=p.wins+p.losses;
     var photo=getPhoto(p.id);
-    var av=photo?'<img src="'+photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);flex-shrink:0" alt="">':'<div class="av">'+ini(p.name)+'</div>';
-    return'<div class="pi" onclick="goP(\''+p.id+'\')">'+av+'<div class="rii"><div class="rname">'+p.name+'</div><div class="rsub">#'+r+' &middot; '+p.wins+'W '+p.losses+'V'+(t?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>';
+    var av=photo?'<img src="'+photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);flex-shrink:0" alt="">':'<div class="av" style="width:42px;height:42px;font-size:14px">'+ini(p.name)+'</div>';
+    return'<div class="pi pi-lg" onclick="goP(\''+p.id+'\')">'+av+'<div class="rii"><div class="rname">'+p.name+'</div><div class="rsub">#'+r+' &middot; '+p.wins+'W '+p.losses+'V'+(t?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>';
   }).join('')||'<div class="empty">Niet gevonden</div>';
 }
 
@@ -401,23 +536,49 @@ function eloChart(pid){
   if(pm.length<2)return'';
   var eloH=[],run=1200;
   pm.forEach(function(m){run=m.wid===pid?run+m.d:run-m.d;eloH.push(run)});
-  var minE=Math.min.apply(null,eloH)-10,maxE=Math.max.apply(null,eloH)+10,range=maxE-minE||1;
-  var W=280,H=56,pad=4;
-  var pts=eloH.map(function(e,i){var x=pad+i*(W-pad*2)/(eloH.length-1);var y=H-pad-(e-minE)/range*(H-pad*2);return x+','+y}).join(' ');
-  var lx=pad+(eloH.length-1)*(W-pad*2)/(eloH.length-1),ly=H-pad-(eloH[eloH.length-1]-minE)/range*(H-pad*2);
-  var col=eloH[eloH.length-1]>=eloH[0]?'#27ae60':'#e74c3c',diff=eloH[eloH.length-1]-eloH[0];
-  return'<div class="card" style="padding:12px 14px 10px;margin-bottom:10px">'+
-    '<div class="lbl" style="margin-bottom:6px">ELO verloop</div>'+
-    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:56px;display:block;overflow:visible">'+
-    '<defs><linearGradient id="g'+pid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+col+'" stop-opacity="0.18"/><stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'+
-    '<polygon points="'+pad+','+H+' '+pts+' '+lx+','+H+'" fill="url(#g'+pid+')"/>'+
-    '<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+
-    '<circle cx="'+lx+'" cy="'+ly+'" r="3.5" fill="'+col+'"/>'+
+  // pad domain by ~5% so points don't sit on edges
+  var rawMin=Math.min.apply(null,eloH),rawMax=Math.max.apply(null,eloH);
+  var span=Math.max(20,rawMax-rawMin);
+  var minE=Math.floor((rawMin-span*0.1)/5)*5,maxE=Math.ceil((rawMax+span*0.1)/5)*5,range=maxE-minE||1;
+  // round nice tick values
+  var midE=Math.round((minE+maxE)/2);
+  // layout: left axis gutter for labels
+  var W=280,H=84,padT=8,padB=18,padL=34,padR=8;
+  var plotW=W-padL-padR,plotH=H-padT-padB;
+  function xAt(i){return padL+i*plotW/(eloH.length-1)}
+  function yAt(e){return padT+plotH-(e-minE)/range*plotH}
+  var pts=eloH.map(function(e,i){return xAt(i)+','+yAt(e)}).join(' ');
+  var lx=xAt(eloH.length-1),ly=yAt(eloH[eloH.length-1]);
+  var col=eloH[eloH.length-1]>=eloH[0]?'var(--pos)':'var(--neg)',diff=eloH[eloH.length-1]-eloH[0];
+  // gridlines + axis labels
+  var ticks=[maxE,midE,minE];
+  var gridY=ticks.map(function(t){return yAt(t)});
+  var grid='';
+  for(var i=0;i<ticks.length;i++){
+    grid+='<line x1="'+padL+'" x2="'+(W-padR)+'" y1="'+gridY[i]+'" y2="'+gridY[i]+'" stroke="var(--line)" stroke-width="1" stroke-dasharray="'+(i===1?'2 3':'0')+'"/>';
+    grid+='<text x="'+(padL-6)+'" y="'+(gridY[i]+3)+'" text-anchor="end" font-size="9" fill="var(--mute)" font-family="JetBrains Mono, ui-monospace, monospace">'+ticks[i]+'</text>';
+  }
+  // x-axis baseline + first/last match labels
+  var firstD=S.matches[S.matches.length-1]?new Date(S.matches[S.matches.length-1].date):null;
+  var firstLabel=pm[0]?new Date(pm[0].date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}):'';
+  var lastLabel=pm[pm.length-1]?new Date(pm[pm.length-1].date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'}):'';
+  return'<div class="card" style="padding:14px 14px 10px;margin-bottom:10px">'+
+    '<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">'+
+      '<div class="lbl" style="margin-bottom:0">ELO verloop</div>'+
+      '<div class="mono" style="font-size:11px;color:'+col+';font-weight:600">'+(diff>=0?'+':'')+diff+'</div>'+
+    '</div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:84px;display:block;overflow:visible">'+
+    '<defs><linearGradient id="g'+pid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+col+'" stop-opacity="0.16"/><stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'+
+    grid+
+    '<line x1="'+padL+'" y1="'+(padT+plotH)+'" x2="'+(W-padR)+'" y2="'+(padT+plotH)+'" stroke="var(--line)" stroke-width="1"/>'+
+    '<polygon points="'+padL+','+(padT+plotH)+' '+pts+' '+lx+','+(padT+plotH)+'" fill="url(#g'+pid+')"/>'+
+    '<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+lx+'" cy="'+ly+'" r="3" fill="'+col+'"/>'+
+    '<text x="'+padL+'" y="'+(H-4)+'" font-size="9" fill="var(--mute)" font-family="JetBrains Mono, ui-monospace, monospace">'+firstLabel+'</text>'+
+    '<text x="'+(W-padR)+'" y="'+(H-4)+'" text-anchor="end" font-size="9" fill="var(--mute)" font-family="JetBrains Mono, ui-monospace, monospace">'+lastLabel+'</text>'+
     '</svg>'+
-    '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mid);margin-top:4px">'+
-    '<span>'+eloH.length+' wedstrijden</span>'+
-    '<span style="font-weight:700;color:'+col+'">'+(diff>=0?'+':'')+diff+' ELO</span>'+
-    '</div></div>';
+    '<div style="font-size:11px;color:var(--mute);margin-top:2px">'+eloH.length+' wedstrijden</div>'+
+    '</div>';
 }
 
 // ── Build: ki card (ranking) ──────────────────────────────────
@@ -429,24 +590,41 @@ function kiAvatar(pid,size){
     '<svg viewBox="0 0 24 24" width="'+(size*0.6)+'" height="'+(size*0.6)+'" fill="var(--mid)"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>';
 }
 
-function kiCard(p,pos){
-  var nc=pos===1?'t1':pos===2?'t2':pos===3?'t3':'';
-  var medal=pos===1?'&#127947;':pos===2?'&#129352;':pos===3?'&#129353;':'';
+function kiCard(p,pos,total){
+  var hasTail=total && total>5; // need enough players for a meaningful bottom-3
+  var fromEnd=total?total-pos+1:99; // 1=last, 2=2nd-last, 3=3rd-last
+  var isLast=hasTail && fromEnd===1;
+  var isLast2=hasTail && fromEnd===2;
+  var isLast3=hasTail && fromEnd===3;
+  var nc=pos===1?'t1':pos===2?'t2':pos===3?'t3':isLast?'tlast':isLast2?'tlast2':isLast3?'tlast3':'';
+  var rankDisp=pos<=3
+    ?(pos===1?'🏆':pos===2?'🥈':'🥉')
+    :isLast?'💩':pos;
   var aq=getActiveQueue();var qpos=-1;
   for(var i=0;i<aq.length;i++){if(aq[i].speler_id===p.id){qpos=i+1;break}}
-  var qmark=qpos===1?'<span style="color:var(--gd);font-size:9px;font-weight:800;margin-left:2px">&#9654;</span>':qpos>1?'<span style="color:var(--mid);font-size:9px;font-weight:700;margin-left:2px">&#129689;'+qpos+'</span>':'';
+  var qmark=qpos===1?'<span class="qchip">▶ Eerste munt</span>':qpos>1?'<span class="qchip-2">#'+qpos+' in rij</span>':'';
   var tot=p.wins+p.losses,pct=tot?Math.round(p.wins/tot*100):0;
-  var statsHtml=tot
-    ?'<div class="ki-stats"><span class="st st-t">'+tot+'&#9679;</span><span class="st st-w">'+p.wins+'W</span><span class="st st-l">'+p.losses+'V</span><span class="st st-p">'+pct+'%</span></div>'
-    :'<div style="font-size:9px;color:var(--mid);margin-top:3px">geen wedstrijden</div>';
-  return'<div class="ki" onclick="goP(\''+p.id+'\')">'+
-    '<div class="ki-num '+nc+'">'+(medal||pos)+'</div>'+
-    '<div class="ki-av-wrap">'+kiAvatar(p.id,44)+'</div>'+
+  var statsLine=tot
+    ?'<div class="ki-name-row2"><span style="color:var(--pos);font-weight:600">'+p.wins+'W</span><span class="dot"></span><span style="color:var(--neg);font-weight:600">'+p.losses+'V</span><span class="dot"></span><span style="color:var(--ink);font-weight:600">'+pct+'%</span></div>'
+    :'<div class="ki-name-row2" style="color:var(--faint)">geen wedstrijden</div>';
+  // Tiered sizing — mirrored: #1==last, #2==2nd-last, #3==3rd-last, rest baseline
+  var tier=pos===1||isLast?1:pos===2||isLast2?2:pos===3||isLast3?3:0;
+  var avSize=tier===1?72:tier===2?62:tier===3?54:46;
+  var sizeCls=tier===1?' r1':tier===2?' r2':tier===3?' r3':'';
+  var topCls=pos<=3?' top3':'';
+  var botCls=(isLast||isLast2||isLast3)?' bot3':'';
+  return'<div class="ki'+topCls+botCls+(isLast?' last':'')+sizeCls+'" onclick="goP(\''+p.id+'\')">'+
+    '<div class="ki-num '+nc+'">'+rankDisp+'</div>'+
+    '<div class="ki-av-wrap">'+kiAvatar(p.id,avSize)+'</div>'+
     '<div class="ki-info">'+
-      '<div class="ki-name">'+p.name+arrow(p.id)+qmark+'</div>'+
-      '<div class="ki-elo">'+p.elo+' ELO</div>'+
-      statsHtml+
-    '</div></div>';
+      '<div class="ki-name">'+p.name+(qmark?' '+qmark:'')+'</div>'+
+      statsLine+
+    '</div>'+
+    '<div class="ki-right">'+
+      arrow(p.id)+
+      '<div class="ki-elo">'+p.elo+'</div>'+
+    '</div>'+
+    '</div>';
 }
 
 // ── Views ─────────────────────────────────────────────────────
@@ -465,35 +643,50 @@ function bK(){
   // Wachtrij banner
   if(aq.length>0){
     html+='<div class="lbl">Wachtrij</div>';
-    html+='<div style="background:white;border-radius:var(--rad);border:1px solid var(--bor);overflow:hidden;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)">';
+    html+='<div style="background:var(--surface);border-radius:var(--r);border:1px solid var(--line);overflow:hidden;margin-bottom:18px">';
     for(var qi=0;qi<aq.length;qi++){
       var qe=aq[qi];var qp=find(qe.speler_id);if(!qp)continue;
       var isFirst=qi===0;
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:'+(isFirst?'var(--gl)':'white')+';border-bottom:1px solid #f0ece6">';
-      html+='<div style="width:22px;height:22px;border-radius:50%;background:'+(isFirst?'var(--gd)':'var(--bor)')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:'+(isFirst?'#fff':'var(--mid)')+';flex-shrink:0">'+(isFirst?'&#9654;':(qi+1))+'</div>';
-      html+=kiAvatar(qp.id,32);
+      var bg=isFirst?'var(--felt-l)':'var(--surface)';
+      var avatarSize=isFirst?40:30;
+      var pad=isFirst?'12px 14px':'10px 14px';
+      html+='<div style="display:flex;align-items:center;gap:11px;padding:'+pad+';background:'+bg+';border-bottom:1px solid var(--line-2)">';
+      // Coin marker — bigger for #1 (eerstvolgende), shrinks for each spot back in the queue
+      var coinSize=Math.max(13, 28 - qi*4);
+      html+='<div class="qcoin" title="muntje ingelegd" style="font-size:'+coinSize+'px;line-height:1;width:32px;text-align:center;flex-shrink:0">\ud83e\ude99</div>';
+      html+=kiAvatar(qp.id,avatarSize);
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:13px;font-weight:700;color:var(--n)">'+qp.name+(isFirst?' <span style="font-size:10px;background:var(--gd);color:#fff;padding:2px 7px;border-radius:10px;font-weight:700">Aan de beurt</span>':'')+'</div>';
-      html+='<div style="font-size:11px;color:var(--mid);margin-top:1px">'+qp.elo+' ELO</div>';
+      html+='<div style="font-size:'+(isFirst?'15px':'13px')+';font-weight:'+(isFirst?'600':'500')+';color:var(--ink);letter-spacing:-.005em">'+qp.name+'</div>';
+      var waitMin=Math.max(0,Math.floor((Date.now()-new Date(qe.aangemaakt_op).getTime())/60000));
+      var waitTxt=waitMin<1?'net ingelegd':waitMin+' min';
+      html+='<div class="mono" style="font-size:11px;color:'+(isFirst?'var(--felt-d)':'var(--mute)')+';margin-top:1px;font-weight:'+(isFirst?'600':'400')+'">'+waitTxt+'</div>';
       html+='</div>';
-      html+='<button onclick="removeQueue(this.dataset.qid)" data-qid="'+qe.id+'" style="border:none;background:rgba(0,0,0,.06);color:var(--mid);cursor:pointer;font-size:14px;padding:3px 7px;line-height:1;border-radius:6px;flex-shrink:0">&#215;</button>';
+      html+='<button onclick="removeQueue(this.dataset.qid)" data-qid="'+qe.id+'" style="border:none;background:transparent;color:'+(isFirst?'var(--felt-d)':'var(--mute)')+';cursor:pointer;font-size:18px;padding:4px 6px;line-height:1;border-radius:var(--r-sm);flex-shrink:0">&#215;</button>';
       html+='</div>';
     }
     html+='</div>';
   } else {
-    html+='<div style="background:white;border-radius:var(--rad);border:1px dashed var(--bor);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px">';
-    html+='<span style="font-size:18px">&#129689;</span>';
-    html+='<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--mid)">Wachtrij is leeg</div>';
-    html+='<div style="font-size:11px;color:var(--mid);opacity:.7">Leg een muntje via een spelersprofiel</div></div>';
+    html+='<div onclick="go(\'q\')" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();go(\'q\')}" style="background:var(--surface);border-radius:var(--r);border:1px dashed var(--line);padding:14px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .12s,border-color .12s" onmouseover="this.style.background=\'var(--surface-2)\';this.style.borderColor=\'var(--felt)\'" onmouseout="this.style.background=\'var(--surface)\';this.style.borderColor=\'var(--line)\'">';
+    html+='<div style="width:32px;height:32px;border-radius:50%;background:var(--felt-l);border:1px solid var(--felt);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;line-height:1">\ud83e\ude99</div>';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink)">Wachtrij is leeg</div>';
+    html+='<div style="font-size:11px;color:var(--mute);margin-top:1px">Klik hier of op een spelersprofiel om een muntje te leggen</div></div>';
+    html+='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>';
     html+='</div>';
   }
 
   if(!act.length){
-    html+='<div class="lbl">Klassement</div><div class="empty">Nog geen wedstrijden.<br>Tik op de groene knop!</div>';
+    html+='<div class="lbl">Klassement</div><div class="empty">Nog geen wedstrijden.<br>Tik op de plus knop hieronder.</div>';
     return html;
   }
-  html+='<div class="lbl">'+act.length+' actieve spelers</div>';
-  html+='<div class="kcols">'+act.map(function(p,i){return kiCard(p,i+1)}).join('')+'</div>';
+  html+='<div class="lbl">Klassement &middot; '+act.length+' actieve spelers</div>';
+  var mid=Math.ceil(act.length/2);
+  html+='<div class="kcols">'+act.map(function(p,i){
+    var card=kiCard(p,i+1,act.length);
+    if(i+1===mid && act.length>3){
+      card+='<div class="ki-mid"><span>middenmoot</span></div>';
+    }
+    return card;
+  }).join('')+'</div>';
   return html;
 }
 
@@ -501,26 +694,27 @@ function bW(){
   var p1=find(S.p1),p2=find(S.p2);
   var lw=S.matches[0]?find(S.matches[0].wid):null,ll=S.matches[0]?find(S.matches[0].lid):null;
   var html='';
-  if(lw&&ll)html+='<div class="ub"><div style="flex:1;font-size:12px;color:var(--mid)">Laatste: <strong style="color:var(--n)">'+lw.name+'</strong> won van '+ll.name+'</div><button class="ubtn" onclick="undo()">&#8617; Ongedaan</button></div>';
+  if(lw&&ll)html+='<div class="ub"><div style="flex:1;font-size:12px;color:var(--mute)">Laatste &middot; <strong style="color:var(--ink);font-weight:500">'+lw.name+'</strong> won van '+ll.name+'</div><button class="ubtn" onclick="undo()">&#8617; Ongedaan</button></div>';
   html+='<div class="lbl">Nieuwe wedstrijd</div><div class="card">';
-  html+='<div style="margin-bottom:13px"><div class="plbl">Speler 1</div><div class="pp'+(p1?' f':'')+'" onclick="openS(\'p1\')">';
-  if(p1)html+='<span style="flex:1;font-size:14px;color:var(--n);font-weight:600">'+p1.name+'</span><button onclick="event.stopPropagation();clearP(\'p1\')" style="border:none;background:none;color:var(--od);cursor:pointer;font-size:22px;padding:0 0 0 8px;line-height:1;-webkit-appearance:none;appearance:none">&#215;</button>';
-  else html+='<span style="flex:1;font-size:14px;color:var(--mid)">&#8212; kies speler &#8212;</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+  html+='<div style="margin-bottom:14px"><div class="plbl">Speler 1</div><div class="pp'+(p1?' f':'')+'" onclick="openS(\'p1\')">';
+  if(p1)html+='<span style="flex:1;font-size:14px;color:var(--ink);font-weight:500">'+p1.name+'</span><button onclick="event.stopPropagation();clearP(\'p1\')" style="border:none;background:none;color:var(--mute);cursor:pointer;font-size:20px;padding:0 0 0 8px;line-height:1;-webkit-appearance:none;appearance:none">&#215;</button>';
+  else html+='<span style="flex:1;font-size:14px;color:var(--mute)">Kies speler</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="1.8"><polyline points="6 9 12 15 18 9"/></svg>';
   html+='</div></div>';
-  html+='<div style="margin-bottom:13px"><div class="plbl">Speler 2</div><div class="pp'+(p2?' f':'')+'" onclick="openS(\'p2\')">';
-  if(p2)html+='<span style="flex:1;font-size:14px;color:var(--n);font-weight:600">'+p2.name+'</span><button onclick="event.stopPropagation();clearP(\'p2\')" style="border:none;background:none;color:var(--od);cursor:pointer;font-size:22px;padding:0 0 0 8px;line-height:1;-webkit-appearance:none;appearance:none">&#215;</button>';
-  else html+='<span style="flex:1;font-size:14px;color:var(--mid)">&#8212; kies speler &#8212;</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mid)" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+  html+='<div style="margin-bottom:14px"><div class="plbl">Speler 2</div><div class="pp'+(p2?' f':'')+'" onclick="openS(\'p2\')">';
+  if(p2)html+='<span style="flex:1;font-size:14px;color:var(--ink);font-weight:500">'+p2.name+'</span><button onclick="event.stopPropagation();clearP(\'p2\')" style="border:none;background:none;color:var(--mute);cursor:pointer;font-size:20px;padding:0 0 0 8px;line-height:1;-webkit-appearance:none;appearance:none">&#215;</button>';
+  else html+='<span style="flex:1;font-size:14px;color:var(--mute)">Kies speler</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="1.8"><polyline points="6 9 12 15 18 9"/></svg>';
   html+='</div></div>';
-  if(p1&&p2)html+='<div class="lbl">Wie heeft gewonnen?</div><div class="wr"><button class="wb'+(S.wid===p1.id?' s':'')+'" onclick="setW(\''+p1.id+'\')">'+p1.name+'</button><button class="wb'+(S.wid===p2.id?' s':'')+'" onclick="setW(\''+p2.id+'\')">'+p2.name+'</button></div>';
-  else html+='<div style="font-size:13px;color:var(--mid);margin-bottom:13px">Selecteer eerst twee spelers</div>';
+  if(p1&&p2)html+='<div class="plbl">Winnaar</div><div class="wr"><button class="wb'+(S.wid===p1.id?' s':'')+'" onclick="setW(\''+p1.id+'\')">'+p1.name+'</button><button class="wb'+(S.wid===p2.id?' s':'')+'" onclick="setW(\''+p2.id+'\')">'+p2.name+'</button></div>';
+  else html+='<div style="font-size:13px;color:var(--mute);margin-bottom:14px">Selecteer eerst twee spelers</div>';
   html+='<button class="btn" onclick="prep()"'+((!p1||!p2||!S.wid)?' disabled':'')+'>Doorgaan &#8594;</button></div>';
   var rc=S.matches.slice(0,6);
   if(rc.length){
-    html+='<div class="lbl" style="margin-top:4px">Recente wedstrijden</div>';
+    html+='<div class="lbl" style="margin-top:18px">Recente wedstrijden</div><div class="card" style="padding:4px 14px">';
     rc.forEach(function(m){
       var w=find(m.wid),l=find(m.lid),ds=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-      html+='<div class="mi"><div><div style="font-size:13px;color:var(--n);font-weight:600"><strong>'+(w?w.name:'?')+'</strong> vs '+(l?l.name:'?')+'</div><div style="font-size:11px;color:var(--mid);margin-top:2px">'+ds+' &middot; <span style="color:var(--o);font-weight:700">+'+m.d+' ELO</span></div></div><span class="badge bw">Gewon.</span></div>';
+      html+='<div class="mi"><div><div style="font-size:13px;color:var(--ink);font-weight:400"><strong style="font-weight:700;color:var(--pos)">'+(w?w.name:'?')+'</strong> <span style="color:var(--mute);font-weight:400">vs</span> '+(l?l.name:'?')+'</div><div class="mono" style="font-size:11px;color:var(--mute);margin-top:2px">'+ds+' &middot; +'+m.d+'</div></div><span class="badge bw">won</span></div>';
     });
+    html+='</div>';
   }
   return html;
 }
@@ -529,15 +723,15 @@ function bConf(){
   var m=S.pend,nwe=m.we+m.d,nle=Math.max(200,m.le-m.d);
   var nextP=S.queue.length>0?find(S.queue[0].speler_id):null;
   return'<div class="cw">'+
-    '<svg width="72" height="72" viewBox="0 0 64 64" style="margin-bottom:18px"><circle cx="32" cy="32" r="30" fill="#111"/><circle cx="32" cy="26" r="16" fill="white"/><circle cx="32" cy="26" r="8" fill="#111"/><text x="32" y="30" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="sans-serif">8</text></svg>'+
-    '<div style="font-size:24px;font-weight:800;color:var(--n);margin-bottom:4px">'+m.wn+' wint!</div>'+
-    '<div style="font-size:14px;color:var(--mid);margin-bottom:16px">van '+m.ln+'</div>'+
+    '<div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.04em;margin-bottom:8px">BEVESTIG UITSLAG</div>'+
+    '<div style="font-size:22px;font-weight:600;color:var(--ink);margin-bottom:4px;letter-spacing:-.02em">'+m.wn+' wint</div>'+
+    '<div style="font-size:13px;color:var(--mute);margin-bottom:22px">van '+m.ln+'</div>'+
     '<div class="cc">'+
-    '<div class="cx">'+kiAvatar(m.wid,40)+'<div style="margin:0 auto 0;font-size:13px;font-weight:700;color:var(--n);margin-top:6px;margin-bottom:4px">'+m.wn+'</div><div style="font-size:12px;color:var(--mid)">'+m.we+' &#8594; <strong style="color:var(--gd)">'+nwe+'</strong></div><div style="font-size:13px;color:var(--gd);font-weight:800;margin-top:3px">+'+m.d+' ELO</div></div>'+
-    '<div class="cx">'+kiAvatar(m.lid,40)+'<div style="margin:0 auto 0;font-size:13px;font-weight:700;color:var(--n);margin-top:6px;margin-bottom:4px">'+m.ln+'</div><div style="font-size:12px;color:var(--mid)">'+m.le+' &#8594; <strong style="color:#c0392b">'+nle+'</strong></div><div style="font-size:13px;color:#c0392b;font-weight:800;margin-top:3px">-'+m.d+' ELO</div></div>'+
+    '<div class="cx">'+kiAvatar(m.wid,72)+'<div style="font-size:13px;font-weight:500;color:var(--ink)">'+m.wn+'</div><div class="mono" style="font-size:11px;color:var(--mute)">'+m.we+' &#8594; '+nwe+'</div><div class="mono" style="font-size:13px;color:var(--pos);font-weight:600;margin-top:4px">+'+m.d+'</div></div>'+
+    '<div class="cx">'+kiAvatar(m.lid,72)+'<div style="font-size:13px;font-weight:500;color:var(--ink)">'+m.ln+'</div><div class="mono" style="font-size:11px;color:var(--mute)">'+m.le+' &#8594; '+nle+'</div><div class="mono" style="font-size:13px;color:var(--neg);font-weight:600;margin-top:4px">-'+m.d+'</div></div>'+
     '</div>'+
-    (nextP&&nextP.id!==m.wid?'<div style="background:var(--gl);border:1px solid var(--gd);border-radius:var(--rad);padding:10px 14px;width:100%;margin-bottom:14px;text-align:left;display:flex;align-items:center;gap:10px">'+kiAvatar(nextP.id,32)+'<div><div style="font-size:10px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.08em">Volgende uitdager</div><div style="font-size:14px;font-weight:700;color:var(--n)">&#129689; '+nextP.name+'</div></div></div>':'')+
-    '<div style="display:flex;gap:10px;width:100%"><button class="obtn" onclick="cancel()" style="flex:1">Annuleer</button><button class="btn" onclick="ok()" style="flex:2">Bevestig &#10003;</button></div>'+
+    (nextP&&nextP.id!==m.wid?'<div style="background:var(--felt-l);border:1px solid var(--felt);border-radius:var(--r);padding:10px 14px;width:100%;margin-bottom:14px;text-align:left;display:flex;align-items:center;gap:11px">'+kiAvatar(nextP.id,30)+'<div><div style="font-size:10px;font-weight:500;color:var(--felt-d);letter-spacing:.04em">VOLGENDE SPELER DIE AAN DE BEURT IS</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:1px">'+nextP.name+'</div></div></div>':'')+
+    '<div style="display:flex;gap:8px;width:100%"><button class="obtn" onclick="cancel()" style="flex:1">Annuleer</button><button class="btn" onclick="ok()" style="flex:2">Bevestig</button></div>'+
     '</div>';
 }
 
@@ -547,25 +741,26 @@ function bQ(){
   var inQueueIds=aq.map(function(q){return q.speler_id});
   var html='';
   if(!aq.length){
-    html+='<div style="background:var(--n);border-radius:var(--rad);padding:22px 16px;text-align:center;margin-bottom:14px">';
-    html+='<div style="font-size:36px;margin-bottom:10px">&#129689;</div>';
-    html+='<div style="color:white;font-size:17px;font-weight:700;margin-bottom:5px">Wachtrij is leeg</div>';
-    html+='<div style="color:rgba(255,255,255,.55);font-size:13px;line-height:1.5">Leg een muntje om in de rij te staan</div></div>';
+    html+='<div style="background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:32px 16px;text-align:center;margin-bottom:18px">';
+    html+='<div style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 12px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>';
+    html+='<div style="color:var(--ink);font-size:14px;font-weight:500;margin-bottom:4px">Wachtrij is leeg</div>';
+    html+='<div style="color:var(--mute);font-size:12px;line-height:1.5">Leg een muntje om in de rij te staan</div></div>';
   } else {
-    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><div class="lbl" style="margin-bottom:0;flex:1">'+aq.length+' in de wachtrij</div><button onclick="clearQueue()" style="font-size:10px;color:var(--mid);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:600;padding:0">Leegmaken</button></div>';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div class="lbl" style="margin-bottom:0;flex:1">Wachtrij &middot; '+aq.length+'</div><button onclick="clearQueue()" style="font-size:11px;color:var(--mute);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500;padding:0">Leegmaken</button></div>';
+    html+='<div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:18px">';
     for(var qi=0;qi<aq.length;qi++){
       var q=aq[qi];var qp=find(q.speler_id);if(!qp)continue;
       var isFirst=qi===0;
       var ts=new Date(q.aangemaakt_op).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--rad);margin-bottom:5px;background:'+(isFirst?'var(--gl)':'#fff')+';border:1.5px solid '+(isFirst?'var(--gd)':'var(--bor)')+';box-shadow:0 1px 3px rgba(0,0,0,.04)">';
-      html+='<div style="width:30px;height:30px;border-radius:50%;background:'+(isFirst?'var(--gd)':'var(--bor)')+';display:flex;align-items:center;justify-content:center;font-size:'+(isFirst?14:13)+'px;font-weight:800;color:'+(isFirst?'#fff':'var(--mid)')+';flex-shrink:0">'+(isFirst?'&#9654;':(qi+1))+'</div>';
+      html+='<div style="display:flex;align-items:center;gap:11px;padding:12px 14px;background:'+(isFirst?'var(--felt-l)':'var(--surface)')+';border-bottom:1px solid var(--line-2)">';
+      html+='<div class="mono" style="width:18px;text-align:center;font-size:12px;font-weight:600;color:'+(isFirst?'var(--felt-d)':'var(--mute)')+';flex-shrink:0">'+(isFirst?'▶':(qi+1))+'</div>';
       html+=kiAvatar(qp.id,32);
-      html+='<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--n)">'+qp.name+(isFirst?' <span style="font-size:10px;background:var(--gd);color:#fff;padding:2px 7px;border-radius:10px;font-weight:700">Aan de beurt</span>':'')+'</div>';
-      html+='<div style="font-size:11px;color:var(--mid);margin-top:2px">Ingelegd om '+ts+'</div></div>';
-      html+='<button onclick="removeQueue(this.dataset.qid)" data-qid="'+q.id+'" style="border:none;background:rgba(0,0,0,.06);color:var(--mid);cursor:pointer;font-size:16px;padding:4px 8px;line-height:1;border-radius:6px;flex-shrink:0">&#215;</button>';
+      html+='<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-.005em">'+qp.name+(isFirst?' <span class="qchip">Eerste munt</span>':'')+'</div>';
+      html+='<div class="mono" style="font-size:11px;color:var(--mute);margin-top:2px">ingelegd '+ts+'</div></div>';
+      html+='<button onclick="removeQueue(this.dataset.qid)" data-qid="'+q.id+'" style="border:none;background:transparent;color:var(--mute);cursor:pointer;font-size:18px;padding:4px 6px;line-height:1;border-radius:var(--r-sm);flex-shrink:0">&#215;</button>';
       html+='</div>';
     }
-    html+='<div class="div"></div>';
+    html+='</div>';
   }
   html+='<div class="lbl">Muntje leggen</div><div class="card">';
   html+='<input type="search" placeholder="Zoek speler..." style="margin-bottom:10px" oninput="qSearch(this.value)" autocorrect="off" autocapitalize="off">';
@@ -581,11 +776,11 @@ function buildQListHtml(players,inQueueIds){
   for(var i=0;i<filtered.length;i++){
     var p=filtered[i],already=inQueueIds.indexOf(p.id)>-1,pos=-1;
     if(already){var aq2=getActiveQueue();for(var j=0;j<aq2.length;j++){if(aq2[j].speler_id===p.id){pos=j+1;break}}}
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0ece6">';
+    html+='<div style="display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line-2)">';
     html+=kiAvatar(p.id,30);
-    html+='<div style="flex:1;font-size:13px;font-weight:600;color:var(--n)">'+p.name+(already?'<span style="font-size:10px;color:var(--mid);font-weight:500"> &middot; #'+pos+' in rij</span>':'')+'</div>';
-    if(already)html+='<span style="font-size:11px;color:var(--mid);font-weight:600;flex-shrink:0">In de rij</span>';
-    else html+='<button onclick="addQueue(this.dataset.pid)" data-pid="'+p.id+'" style="background:var(--n);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;-webkit-appearance:none;appearance:none">&#129689; Leg</button>';
+    html+='<div style="flex:1;font-size:14px;font-weight:500;color:var(--ink);letter-spacing:-.005em">'+p.name+(already?'<span class="mono" style="font-size:11px;color:var(--mute);font-weight:500"> &middot; #'+pos+'</span>':'')+'</div>';
+    if(already)html+='<span style="font-size:11px;color:var(--mute);font-weight:500;flex-shrink:0">in rij</span>';
+    else html+='<button onclick="addQueue(this.dataset.pid)" data-pid="'+p.id+'" style="background:var(--ink);color:#fff;border:none;border-radius:var(--r-sm);padding:6px 11px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;-webkit-appearance:none;appearance:none;letter-spacing:.005em">Leg muntje</button>';
     html+='</div>';
   }
   return html;
@@ -601,25 +796,25 @@ function bS(){
   var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
   var p1=S.h1?find(S.h1):null,p2=S.h2?find(S.h2):null,hh=p1&&p2?h2h(p1.id,p2.id):null;
   var html='<div class="lbl">Hoogtepunten</div>';
-  if(topStr&&topStr.s>0)html+='<div class="sh"><div class="si" style="background:#fff3cd">&#128293;</div><div><div style="font-size:10px;color:var(--mid);font-weight:700;text-transform:uppercase;letter-spacing:.07em">Langste winserie ooit</div><div style="font-size:15px;font-weight:700;color:var(--n);margin-top:2px">'+topStr.p.name+'</div><div style="font-size:12px;color:var(--mid)">'+topStr.s+' op rij gewonnen</div></div></div>';
-  html+='<div class="sh"><div class="si" style="background:var(--ol)">&#127922;</div><div><div style="font-size:10px;color:var(--mid);font-weight:700;text-transform:uppercase;letter-spacing:.07em">Meest actief</div><div style="font-size:15px;font-weight:700;color:var(--n);margin-top:2px">'+top.name+'</div><div style="font-size:12px;color:var(--mid)">'+(top.wins+top.losses)+' wedstrijden</div></div></div>';
-  if(topUp&&topUp.c>0)html+='<div class="sh"><div class="si" style="background:var(--gl)">&#128200;</div><div><div style="font-size:10px;color:var(--mid);font-weight:700;text-transform:uppercase;letter-spacing:.07em">Stijger van de week</div><div style="font-size:15px;font-weight:700;color:var(--n);margin-top:2px">'+topUp.p.name+'</div><div style="font-size:12px;color:var(--mid)">+'+topUp.c+' ELO in 7 dagen</div></div></div>';
-  if(topDn&&topDn.c<0)html+='<div class="sh"><div class="si" style="background:#fad7d7">&#128201;</div><div><div style="font-size:10px;color:var(--mid);font-weight:700;text-transform:uppercase;letter-spacing:.07em">Daler van de week</div><div style="font-size:15px;font-weight:700;color:var(--n);margin-top:2px">'+topDn.p.name+'</div><div style="font-size:12px;color:var(--mid)">'+topDn.c+' ELO in 7 dagen</div></div></div>';
-  html+='<div class="div"></div><div class="lbl">Laatste 10 wedstrijden</div>';
+  if(topStr&&topStr.s>0)html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-9z"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Langste winserie ooit</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+topStr.p.name+'</div><div class="mono" style="font-size:12px;color:var(--mute);margin-top:2px">'+topStr.s+' op rij</div></div></div>';
+  html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Meest actief</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+top.name+'</div><div class="mono" style="font-size:12px;color:var(--mute);margin-top:2px">'+(top.wins+top.losses)+' wedstrijden</div></div></div>';
+  if(topUp&&topUp.c>0)html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Stijger van de week</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+topUp.p.name+'</div><div class="mono" style="font-size:12px;color:var(--pos);margin-top:2px;font-weight:600">+'+topUp.c+' ELO &middot; 7d</div></div></div>';
+  if(topDn&&topDn.c<0)html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--neg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 9 13 13 9 21 17"/><polyline points="14 17 21 17 21 10"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Daler van de week</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+topDn.p.name+'</div><div class="mono" style="font-size:12px;color:var(--neg);margin-top:2px;font-weight:600">'+topDn.c+' ELO &middot; 7d</div></div></div>';
+  html+='<div class="div"></div><div class="lbl">Laatste 10 wedstrijden</div><div class="card" style="padding:4px 14px">';
   var last10=S.matches.slice(0,10);
-  if(last10.length){last10.forEach(function(m){var w=find(m.wid),l=find(m.lid),ds=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--n);font-weight:600"><strong>'+(w?w.name:'?')+'</strong> vs '+(l?l.name:'?')+'</div><div style="font-size:11px;color:var(--mid);margin-top:2px">'+ds+' &middot; <span style="color:var(--o);font-weight:700">+'+m.d+' ELO</span></div></div><span class="badge bw">Gewon.</span></div>'})}
+  if(last10.length){last10.forEach(function(m){var w=find(m.wid),l=find(m.lid),ds=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--ink);font-weight:400"><strong style="font-weight:700">'+(w?w.name:'?')+'</strong> <span style="color:var(--mute);font-weight:400">vs</span> '+(l?l.name:'?')+'</div><div class="mono" style="font-size:11px;color:var(--mute);margin-top:2px">'+ds+' &middot; +'+m.d+'</div></div><span class="badge bw">won</span></div>'})}
   else html+='<div class="empty" style="padding:12px 0">Nog geen wedstrijden</div>';
-  html+='<div class="div"></div><div class="lbl">Head-to-head</div><div class="card"><div style="display:flex;gap:10px;margin-bottom:12px">';
-  html+='<div style="flex:1"><div class="plbl">Speler 1</div><select onchange="S.h1=this.value;render()"><option value="">&#8212; kies &#8212;</option>'+sp.map(function(p){return'<option value="'+p.id+'"'+(S.h1===p.id?' selected':'')+'>'+p.name+'</option>'}).join('')+'</select></div>';
-  html+='<div style="flex:1"><div class="plbl">Speler 2</div><select onchange="S.h2=this.value;render()"><option value="">&#8212; kies &#8212;</option>'+sp.filter(function(p){return p.id!==S.h1}).map(function(p){return'<option value="'+p.id+'"'+(S.h2===p.id?' selected':'')+'>'+p.name+'</option>'}).join('')+'</select></div>';
+  html+='</div><div class="div"></div><div class="lbl">Head-to-head</div><div class="card"><div style="display:flex;gap:10px;margin-bottom:14px">';
+  html+='<div style="flex:1"><div class="plbl">Speler 1</div><select onchange="S.h1=this.value;render()"><option value="">Kies</option>'+sp.map(function(p){return'<option value="'+p.id+'"'+(S.h1===p.id?' selected':'')+'>'+p.name+'</option>'}).join('')+'</select></div>';
+  html+='<div style="flex:1"><div class="plbl">Speler 2</div><select onchange="S.h2=this.value;render()"><option value="">Kies</option>'+sp.filter(function(p){return p.id!==S.h1}).map(function(p){return'<option value="'+p.id+'"'+(S.h2===p.id?' selected':'')+'>'+p.name+'</option>'}).join('')+'</select></div>';
   html+='</div>';
   if(hh&&hh.t>0){
     var pct=Math.round(hh.aw/hh.t*100);
-    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:12px;font-weight:700;color:var(--o);flex-shrink:0">'+p1.name+'</span><div style="flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--bor);display:flex"><div style="width:'+pct+'%;background:var(--o)"></div><div style="width:'+(100-pct)+'%;background:var(--n)"></div></div><span style="font-size:12px;font-weight:700;color:var(--n);flex-shrink:0">'+p2.name+'</span></div>';
-    html+='<div style="text-align:center;font-size:30px;font-weight:800;color:var(--n)">'+hh.aw+' &ndash; '+hh.bw+'</div><div style="text-align:center;font-size:12px;color:var(--mid);margin-bottom:10px">'+hh.t+' wedstrijd'+(hh.t!==1?'en':'')+'</div>';
-    hh.ms.forEach(function(m){var won=m.wid===p1.id,d=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--n);font-weight:600">'+(won?p1.name:p2.name)+' won</div><div style="font-size:11px;color:var(--mid)">'+d+'</div></div><span class="badge '+(won?'bw':'bl')+'">'+(won?p1.name:p2.name)+'</span></div>';});
-  }else if(hh)html+='<div style="font-size:13px;color:var(--mid);text-align:center;padding:10px">Nog nooit tegen elkaar gespeeld</div>';
-  else html+='<div style="font-size:13px;color:var(--mid);text-align:center;padding:10px">Selecteer twee spelers</div>';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:12px;font-weight:500;color:var(--ink);flex-shrink:0">'+p1.name+'</span><div style="flex:1;height:6px;border-radius:3px;overflow:hidden;background:var(--line);display:flex"><div style="width:'+pct+'%;background:var(--ink)"></div><div style="width:'+(100-pct)+'%;background:var(--line-2)"></div></div><span style="font-size:12px;font-weight:500;color:var(--mute);flex-shrink:0">'+p2.name+'</span></div>';
+    html+='<div class="mono" style="text-align:center;font-size:28px;font-weight:600;color:var(--ink);letter-spacing:-.02em">'+hh.aw+' &ndash; '+hh.bw+'</div><div style="text-align:center;font-size:11px;color:var(--mute);margin-bottom:12px">'+hh.t+' wedstrijd'+(hh.t!==1?'en':'')+'</div>';
+    hh.ms.forEach(function(m){var won=m.wid===p1.id,d=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--ink);font-weight:500">'+(won?p1.name:p2.name)+' won</div><div class="mono" style="font-size:11px;color:var(--mute);margin-top:2px">'+d+'</div></div><span class="badge '+(won?'bw':'bl')+'">'+(won?p1.name:p2.name)+'</span></div>';});
+  }else if(hh)html+='<div style="font-size:13px;color:var(--mute);text-align:center;padding:10px">Nog nooit tegen elkaar gespeeld</div>';
+  else html+='<div style="font-size:13px;color:var(--mute);text-align:center;padding:10px">Selecteer twee spelers</div>';
   html+='</div>';return html;
 }
 
@@ -672,14 +867,14 @@ function bP(){
   }
   var s2=sorted(),a=S.players.slice().sort(function(x,y){return x.name.localeCompare(y.name)});
   var html2='<div class="lbl">Spelersbeheer &middot; '+S.players.length+' spelers</div>';
-  html2+='<div class="card" style="margin-bottom:10px"><div class="lbl">Nieuwe speler</div><div class="ar"><input type="text" id="nn" placeholder="Voornaam (+ initiaal)" onkeydown="if(event.keyCode===13)addP()" autocorrect="off" autocapitalize="words"><button class="btn" style="width:auto;padding:11px 16px;flex-shrink:0" onclick="addP()">+</button></div></div>';
-  html2+='<input type="search" placeholder="Zoek speler..." style="margin-bottom:10px" oninput="filterP(this.value)" autocorrect="off" autocapitalize="off">';
+  html2+='<div class="card" style="margin-bottom:10px"><div class="lbl">Nieuwe speler</div><div class="ar"><input type="text" id="nn" placeholder="Voornaam (+ initiaal)" onkeydown="if(event.keyCode===13)addP()" autocorrect="off" autocapitalize="words"><button class="btn" style="width:auto;padding:11px 16px;flex-shrink:0;background:var(--felt);font-size:18px;font-weight:700" onclick="addP()">+</button></div></div>';
+  html2+='<div style="position:relative;margin-bottom:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" placeholder="Zoek speler in lijst..." style="width:100%;padding:11px 14px 11px 38px;background:var(--surface-2);border:1px solid transparent;border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--ink);-webkit-appearance:none;appearance:none;outline:none;transition:background .12s,border-color .12s" onfocus="this.style.background=\'var(--surface)\';this.style.borderColor=\'var(--felt)\'" onblur="this.style.background=\'var(--surface-2)\';this.style.borderColor=\'transparent\'" oninput="filterP(this.value)" autocorrect="off" autocapitalize="off"></div>';
   html2+='<div id="plist">'+a.map(function(p){
     var r2=0;for(var i=0;i<s2.length;i++){if(s2[i].id===p.id){r2=i+1;break}}
     var t2=p.wins+p.losses;
     var photo2=getPhoto(p.id);
-    var av2=photo2?'<img src="'+photo2+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);flex-shrink:0;display:block" alt="">':'<div class="av">'+ini(p.name)+'</div>';
-    return'<div class="pi" onclick="goP(\''+p.id+'\')">'+av2+'<div class="rii"><div class="rname">'+p.name+'</div><div class="rsub">#'+r2+' &middot; '+p.wins+'W '+p.losses+'V'+(t2?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>';
+    var av2=photo2?'<img src="'+photo2+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);flex-shrink:0;display:block" alt="">':'<div class="av" style="width:42px;height:42px;font-size:14px">'+ini(p.name)+'</div>';
+    return'<div class="pi pi-lg" onclick="goP(\''+p.id+'\')">'+av2+'<div class="rii"><div class="rname">'+p.name+'</div><div class="rsub">#'+r2+' &middot; '+p.wins+'W '+p.losses+'V'+(t2?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>';
   }).join('')+'</div>';
   return html2;
 }
