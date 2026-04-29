@@ -13,6 +13,10 @@
 <meta property="og:title" content="dpi Pool Klassement 🎱">
 <meta property="og:description" content="Bekijk het live ELO-klassement van de dpi pooltafel. Wie staat er bovenaan?">
 <meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" sizes="any" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2315171a'/><circle cx='50' cy='42' r='26' fill='white'/><circle cx='50' cy='42' r='13' fill='%2315171a'/><text x='50' y='47' text-anchor='middle' font-size='13' font-weight='700' fill='white' font-family='system-ui,sans-serif'>8</text></svg>">
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%2315171a'/><circle cx='50' cy='42' r='26' fill='white'/><circle cx='50' cy='42' r='13' fill='%2315171a'/><text x='50' y='47' text-anchor='middle' font-size='13' font-weight='700' fill='white' font-family='system-ui,sans-serif'>8</text></svg>">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"><rect width='180' height='180' rx='40' fill='%232a1a3e'/><circle cx='90' cy='85' r='46' fill='white'/><circle cx='90' cy='85' r='23' fill='%2315171a'/><text x='90' y='93' text-anchor='middle' font-size='22' font-weight='700' fill='white' font-family='system-ui,sans-serif'>8</text><text x='90' y='152' text-anchor='middle' font-size='14' font-weight='600' fill='rgba(245,241,236,0.7)' font-family='system-ui,sans-serif'>dpi Pool</text></svg>">
+<meta name="apple-mobile-web-app-title" content="dpi Pool">
 <title>dpi Pool Klassement 🎱</title>
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%232a1a3e'/><circle cx='50' cy='50' r='28' fill='white'/><circle cx='50' cy='50' r='14' fill='%2315171a'/><text x='50' y='56' text-anchor='middle' font-size='14' font-weight='700' fill='white' font-family='sans-serif'>8</text></svg>">
 <script>
@@ -137,7 +141,8 @@ body{margin:0;padding:0;overflow:hidden;background:#2a1a3e;font-family:'Inter',-
 .cnt{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 14px 12px;min-height:0;-webkit-overflow-scrolling:touch;background-color:var(--bg);background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='64' viewBox='0 0 56 64'><g fill='none' stroke='%231b1d1f' stroke-opacity='0.045' stroke-width='1'><polygon points='28,2 53,16 53,46 28,60 3,46 3,16'/><polygon points='28,18 41,25 41,39 28,46 15,39 15,25'/></g></svg>");background-size:56px 64px;background-repeat:repeat;background-attachment:local}
 
 /* Bottom nav */
-.nav{background:var(--surface);border-top:1px solid var(--line);flex-shrink:0;display:flex;align-items:stretch;height:62px;padding:0;padding-bottom:env(safe-area-inset-bottom)}
+.nav{background:var(--surface);border-top:1px solid var(--line);flex-shrink:0;display:flex;align-items:stretch;height:62px;padding:0;padding-bottom:env(safe-area-inset-bottom,0px);position:relative}
+.nav::after{content:'';position:absolute;left:0;right:0;top:100%;height:env(safe-area-inset-bottom,0px);background:var(--surface)}
 .nb{flex:1;padding:8px 1px 9px;border:none;background:none;cursor:pointer;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:inherit;font-weight:500;color:var(--mute);letter-spacing:.005em;-webkit-appearance:none;appearance:none;position:relative;transition:color .15s}
 .nb.a{color:var(--ink)}
 .nb svg{width:20px;height:20px;stroke-width:1.6}
@@ -431,9 +436,8 @@ html.is-pwa .top {
   padding-bottom: 10px;
 }
 html.is-pwa .nav {
-  /* Home indicator ruimte onderaan */
-  height: calc(62px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: 62px;
+  padding-bottom: 0;
 }
 html.is-pwa #toast {
   bottom: calc(74px + env(safe-area-inset-bottom, 0px));
