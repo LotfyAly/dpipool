@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
@@ -238,6 +238,107 @@ select:focus{border-color:var(--ink)}
 .trend-dn{color:var(--neg);font-size:10px;font-weight:600;letter-spacing:.02em;line-height:1}
 .ki-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
 .ki-right:empty{display:none}
+
+/* ═══════════════════════════════════════════════
+   MOBILE FIXES — comprehensive touch & readability
+   ═══════════════════════════════════════════════ */
+
+/* Base touch targets — minimum 44px */
+.nb { min-height: 44px; }
+.btn { min-height: 48px; font-size: 15px; }
+.obtn { min-height: 48px; }
+.wb { min-height: 52px; font-size: 14px; }
+.pp { min-height: 52px; }
+.pi { min-height: 52px; padding: 12px 14px; }
+.pi-lg { min-height: 60px; padding: 14px; }
+.btn.btn-sm { min-height: 40px; font-size: 13px; }
+
+/* Bigger, readable inputs on mobile — prevents iOS zoom-in */
+input[type=text],
+input[type=search],
+select { font-size: 16px !important; min-height: 48px; padding: 12px 14px; }
+select { padding-right: 36px; }
+
+/* Ki ranking rows — more breathing room */
+.ki { padding: 13px 14px; min-height: 60px; }
+.ki.r1 { padding: 20px 14px; }
+.ki.r2 { padding: 17px 14px; }
+.ki.r3 { padding: 14px 14px; }
+
+/* Ki name — bigger on small screens */
+.ki-name { font-size: 15px !important; }
+.ki-name-row2 { font-size: 12px !important; }
+.ki-elo { font-size: 15px !important; }
+
+/* Stat grid — don't squeeze */
+.sg { gap: 6px; }
+.sb { padding: 14px 8px; }
+.sb .sv { font-size: 22px; }
+
+/* Cards — enough padding */
+.card { padding: 16px; margin-bottom: 12px; }
+.sh { padding: 14px 12px; gap: 12px; }
+
+/* Winner buttons — full height, easy to tap */
+.wr { gap: 10px; margin-bottom: 16px; }
+.wb { padding: 16px 8px; font-size: 14px; min-height: 56px; }
+
+/* Queue list items */
+.qi-row { min-height: 56px; padding: 12px 14px; }
+
+/* Modal — full width on mobile, safe padding */
+.modal-box { 
+  padding: 24px 20px max(32px, env(safe-area-inset-bottom, 32px));
+  border-radius: 16px 16px 0 0;
+}
+.modal-cancel, .modal-confirm { min-height: 48px; font-size: 15px; }
+
+/* Back button — bigger hit area */
+.back { padding: 8px 0; margin-bottom: 16px; font-size: 14px; }
+
+/* Confirm view cards */
+.cc { gap: 8px; }
+.cx { padding: 16px 10px; }
+
+/* Toast — clear of nav bar */
+#toast { 
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px)); 
+  font-size: 14px;
+  padding: 11px 20px;
+  max-width: calc(100vw - 32px);
+  white-space: normal;
+  text-align: center;
+}
+
+/* Content area padding */
+.cnt { padding: 16px 12px 16px; }
+
+/* Nav height — account for home indicator */
+.nav { height: calc(62px + env(safe-area-inset-bottom, 0px)); }
+
+/* Remove overly-dense backgrounds on small screens */
+@media (max-width: 390px) {
+  .ki-name { font-size: 14px !important; }
+  .cnt { padding: 12px 10px 12px; }
+  .card { padding: 14px 12px; }
+}
+
+/* Scrollable areas don't bounce awkwardly */
+.cnt { overscroll-behavior-y: contain; }
+
+/* Prevent text from being microscopic */
+.lbl { font-size: 11px; letter-spacing: .03em; }
+.plbl { font-size: 12px; margin-bottom: 8px; }
+.rsub { font-size: 12px; }
+
+/* Search overlay — full screen feel */
+.sh-hdr { padding: 16px 14px 12px; margin: -16px -12px 0; }
+
+/* pi items in player list */
+.pi .rname { font-size: 15px; }
+.pi .rsub { font-size: 12px; }
+.pi .elo { font-size: 14px; }
+
 </style>
 </head>
 <body>
@@ -312,8 +413,8 @@ function hideLoad(){document.getElementById('loading').style.display='none';docu
 async function dbLoad(){
   var r1=await db.from('players').select('*').order('elo',{ascending:false});
   var r2=await db.from('matches').select('*').order('created_at',{ascending:false}).limit(200);
-  if(r1.error)throw new Error('players: '+r1.error.message);
-  if(r2.error)throw new Error('matches: '+r2.error.message);
+  if(r1.error)throw new Error('players: '+String(r1.error.message||r1.error));
+  if(r2.error)throw new Error('matches: '+String(r2.error.message||r2.error));
   S.players=(r1.data||[]).map(function(p){return{id:p.id,name:p.name,elo:p.elo,wins:p.wins,losses:p.losses}});
   S.matches=(r2.data||[]).map(function(m){return{id:m.id,wid:m.winner_id,lid:m.loser_id,d:m.delta,date:m.created_at}});
 }
@@ -325,7 +426,7 @@ async function dbLoadQueue(){
 }
 async function dbSeed(){
   var r=await db.from('players').select('id').limit(1);
-  if(r.error)throw new Error('Verbinding mislukt: '+r.error.message);
+  if(r.error){var msg=r.error&&r.error.message?String(r.error.message):'Supabase verbinding mislukt';throw new Error(msg);}
   if(r.data&&r.data.length>0)return;
   await db.from('players').insert(NAMES.map(function(n){return{name:n,elo:ELO0,wins:0,losses:0}}));
 }
@@ -942,7 +1043,7 @@ async function handlePhotoUpload(input, pid){
     }
     // Upload new
     var r = await db.storage.from('player-photos').upload(filename, file, {upsert:true, contentType:file.type});
-    if(r.error) throw r.error;
+    if(r.error) throw new Error(String(r.error.message||r.error));
     var url = db.storage.from('player-photos').getPublicUrl(filename).data.publicUrl;
     _photoCache[pid] = url + '?t=' + Date.now();
     toast('Foto opgeslagen! &#128247;');
@@ -1005,7 +1106,8 @@ async function init(){
     hideLoad();
     render();
   }catch(e){
-    var msg=e&&e.message?e.message:String(e);
+    var msg='Onbekende fout';
+    try{msg=e&&e.message?String(e.message):String(e)}catch(_){}
     document.getElementById('loading').querySelector('p').textContent='Fout: '+msg;
     console.error('Init error:',e);
   }
