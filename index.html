@@ -20,6 +20,55 @@ const SUPABASE_URL = 'https://zbjnuntzsfakawrsahkl.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gz42ihuz2TFp9b-G5HA1Sw_V-nwCKX3';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+// Browser & context detectie — uitgevoerd vóór alles
+(function(){
+  var ua = navigator.userAgent;
+  var html = document.documentElement;
+
+  // Standalone / PWA (opgeslagen op thuisscherm)
+  var isStandalone = window.navigator.standalone === true
+    || window.matchMedia('(display-mode: standalone)').matches;
+
+  // Safari op iOS
+  var isIOS = /iphone|ipad|ipod/i.test(ua);
+  var isSafari = isIOS && /safari/i.test(ua) && !/crios|fxios|opios|mercury/i.test(ua);
+
+  // Chrome op iOS (CriOS)
+  var isChromeIOS = /crios/i.test(ua);
+
+  // Chrome op Android/desktop
+  var isChrome = /chrome/i.test(ua) && !/chromium|edg/i.test(ua);
+
+  // Android
+  var isAndroid = /android/i.test(ua);
+
+  // Desktop
+  var isDesktop = !isIOS && !isAndroid && !/mobile/i.test(ua);
+
+  // Classes op <html> zetten — CSS kan hierop reageren
+  if(isStandalone) html.classList.add('is-pwa');
+  if(isIOS)        html.classList.add('is-ios');
+  if(isSafari)     html.classList.add('is-safari');
+  if(isChromeIOS)  html.classList.add('is-chrome-ios');
+  if(isChrome)     html.classList.add('is-chrome');
+  if(isAndroid)    html.classList.add('is-android');
+  if(isDesktop)    html.classList.add('is-desktop');
+
+  // Sla op voor JS gebruik later
+  window.__ctx = {
+    isStandalone: isStandalone,
+    isIOS: isIOS,
+    isSafari: isSafari,
+    isChromeIOS: isChromeIOS,
+    isChrome: isChrome,
+    isAndroid: isAndroid,
+    isDesktop: isDesktop
+  };
+})();
+</script>
+
 <style>
 html{-webkit-text-size-adjust:100%;overflow:hidden}
 body{margin:0;padding:0;overflow:hidden;background:#2a1a3e;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f6f5f2;color:#1a1a17;-webkit-font-smoothing:antialiased;font-feature-settings:'cv11','ss01','ss03'}
@@ -362,6 +411,98 @@ select { padding-right: 36px; }
 .sh-grid .sh{margin-bottom:0;flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
 .sh-grid .sh .si{width:28px;height:28px;border-radius:7px}
 .sh-grid .sh .si svg{width:13px;height:13px}
+
+/* ═══════════════════════════════════════════════
+   CONTEXT-SPECIFIEKE STIJLEN
+   ═══════════════════════════════════════════════ */
+
+/* ── PWA / Webapp (opgeslagen op thuisscherm) ── */
+html.is-pwa #app {
+  /* Geen adresbalk — gebruik volledige schermhoogte */
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+}
+html.is-pwa .top {
+  /* Statusbalk ruimte bovenaan */
+  padding-top: env(safe-area-inset-top, 20px);
+  height: calc(52px + env(safe-area-inset-top, 20px));
+  min-height: calc(52px + env(safe-area-inset-top, 20px));
+  align-items: flex-end;
+  padding-bottom: 10px;
+}
+html.is-pwa .nav {
+  /* Home indicator ruimte onderaan */
+  height: calc(62px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html.is-pwa #toast {
+  bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+}
+html.is-pwa .modal-box {
+  padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
+}
+
+/* ── iOS Safari (in browser, niet PWA) ── */
+html.is-safari:not(.is-pwa) .top {
+  /* Geen statusbar ruimte nodig — adresbalk is er al */
+  padding-top: 0;
+  height: 52px;
+  min-height: 52px;
+  align-items: center;
+  padding-bottom: 0;
+}
+html.is-safari:not(.is-pwa) .nav {
+  /* Adresbalk onderaan op nieuwere Safari */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(62px + env(safe-area-inset-bottom, 0px));
+}
+html.is-safari:not(.is-pwa) #toast {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Chrome iOS ── */
+html.is-chrome-ios:not(.is-pwa) .nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(62px + env(safe-area-inset-bottom, 0px));
+}
+html.is-chrome-ios:not(.is-pwa) #toast {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Android Chrome ── */
+html.is-android:not(.is-pwa) .nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Desktop browser — volledig scherm, geen beperkingen ── */
+html.is-desktop #toast {
+  top: 16px;
+  bottom: auto;
+  right: 20px;
+  left: auto;
+  transform: none;
+  border-radius: 8px;
+}
+html.is-desktop .modal-overlay {
+  align-items: center;
+}
+html.is-desktop .modal-box {
+  border-radius: 12px;
+  max-width: 480px;
+  padding-bottom: 24px;
+}
+
+/* ── iOS in het algemeen (font rendering) ── */
+html.is-ios input, html.is-ios select {
+  /* Voorkom iOS auto-zoom bij focus */
+  font-size: 16px !important;
+}
+html.is-ios .cnt {
+  /* Betere momentum scroll op iOS */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
 </style>
 </head>
 <body>
@@ -375,7 +516,7 @@ select { padding-right: 36px; }
       <text x="12" y="15.2" text-anchor="middle" font-size="7" font-weight="700" fill="#15171a" font-family="Inter, sans-serif">8</text>
     </svg>
     <h1>dpi Pool <span class="dim">/ Klassement</span></h1>
-    <span class="top-ct" id="ct"></span>
+    <span class="top-ct" id="ct"></span><span id="ctx-badge" style="font-size:9px;opacity:.35;color:rgba(245,241,236,.8);margin-left:4px"></span>
   </div>
   <div class="cnt" id="mc"></div>
   <div class="nav">
@@ -1183,6 +1324,13 @@ async function init(){
     setupRealtime();
     hideLoad();
     render();
+  // Context badge
+  var ctx=window.__ctx||{};
+  var ctxEl=document.getElementById('ctx-badge');
+  if(ctxEl){
+    var label=ctx.isStandalone?'PWA':ctx.isSafari?'Safari':ctx.isChromeIOS?'Chrome iOS':ctx.isChrome?'Chrome':ctx.isDesktop?'Desktop':'Browser';
+    ctxEl.textContent=label;
+  }
   }catch(e){
     var msg='Onbekende fout';
     try{msg=e&&e.message?String(e.message):String(e)}catch(_){}
