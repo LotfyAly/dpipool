@@ -14,6 +14,7 @@
 <meta property="og:description" content="Bekijk het live ELO-klassement van de dpi pooltafel. Wie staat er bovenaan?">
 <meta property="og:type" content="website">
 <title>dpi Pool Klassement 🎱</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%232a1a3e'/><circle cx='50' cy='50' r='28' fill='white'/><circle cx='50' cy='50' r='14' fill='%2315171a'/><text x='50' y='56' text-anchor='middle' font-size='14' font-weight='700' fill='white' font-family='sans-serif'>8</text></svg>">
 <script>
 const SUPABASE_URL = 'https://zbjnuntzsfakawrsahkl.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_gz42ihuz2TFp9b-G5HA1Sw_V-nwCKX3';
@@ -78,7 +79,7 @@ body{height:100%;min-height:-webkit-fill-available;margin:0;padding:0;overflow:h
 #app{display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;background:var(--bg);overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0}
 
 /* Top bar — dpi deep purple */
-.top{padding:0 16px;height:52px;min-height:52px;display:flex;align-items:center;gap:10px;background:#2a1a3e;flex-shrink:0;position:relative;border-bottom:1px solid #1a0f29}
+.top{padding:env(safe-area-inset-top,0px) 16px 0;height:calc(52px + env(safe-area-inset-top,0px));min-height:calc(52px + env(safe-area-inset-top,0px));display:flex;align-items:flex-end;padding-bottom:10px;gap:10px;background:#2a1a3e;flex-shrink:0;position:relative;border-bottom:1px solid #1a0f29}
 .top h1{font-size:14px;font-weight:600;color:#f5f1ec;flex:1;margin:0;letter-spacing:-0.01em}
 .top h1 .dim{color:rgba(245,241,236,.55);font-weight:500}
 .top-ct{font-size:11px;color:rgba(245,241,236,.6);flex-shrink:0;font-variant-numeric:tabular-nums;letter-spacing:.02em}
@@ -342,6 +343,22 @@ select { padding-right: 36px; }
 .pi .rsub { font-size: 12px; }
 .pi .elo { font-size: 14px; }
 
+
+/* PWA standalone mode — geen adresbalk, wel status bar */
+@media (display-mode: standalone) {
+  .top {
+    padding-top: max(env(safe-area-inset-top, 20px), 20px);
+    height: calc(52px + max(env(safe-area-inset-top, 20px), 20px));
+    min-height: calc(52px + max(env(safe-area-inset-top, 20px), 20px));
+    align-items: flex-end;
+    padding-bottom: 10px;
+  }
+}
+
+/* iOS webkit standalone (oudere detectie) */
+@media screen and (display-mode: standalone) {
+  #app { height: 100dvh; }
+}
 </style>
 </head>
 <body>
