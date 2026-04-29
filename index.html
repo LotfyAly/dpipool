@@ -21,8 +21,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_gz42ihuz2TFp9b-G5HA1Sw_V-nwCKX3';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-html{height:100%;height:-webkit-fill-available;-webkit-text-size-adjust:100%}
-body{height:100%;min-height:-webkit-fill-available;margin:0;padding:0;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f6f5f2;color:#1a1a17;-webkit-font-smoothing:antialiased;font-feature-settings:'cv11','ss01','ss03'}
+html{-webkit-text-size-adjust:100%;overflow:hidden}
+body{margin:0;padding:0;overflow:hidden;background:#2a1a3e;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#f6f5f2;color:#1a1a17;-webkit-font-smoothing:antialiased;font-feature-settings:'cv11','ss01','ss03'}
 *{-webkit-box-sizing:border-box;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   /* surfaces — dpi inspired: warm off-white, soft hex-pattern neutrals */
@@ -76,7 +76,7 @@ body{height:100%;min-height:-webkit-fill-available;margin:0;padding:0;overflow:h
 #cfg .box{background:white;border-radius:var(--r-lg);padding:24px;max-width:360px;text-align:center}
 
 /* Shell */
-#app{display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;background:var(--bg);overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0}
+#app{display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);overflow:hidden}
 
 /* Top bar — dpi deep purple */
 .top{padding:env(safe-area-inset-top,0px) 16px 0;height:calc(52px + env(safe-area-inset-top,0px));min-height:calc(52px + env(safe-area-inset-top,0px));display:flex;align-items:flex-end;padding-bottom:10px;gap:10px;background:#2a1a3e;flex-shrink:0;position:relative;border-bottom:1px solid #1a0f29}
@@ -356,9 +356,12 @@ select { padding-right: 36px; }
 }
 
 /* iOS webkit standalone (oudere detectie) */
-@media screen and (display-mode: standalone) {
-  #app { height: 100dvh; }
-}
+/* standalone height handled by position:fixed */
+
+.sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0}
+.sh-grid .sh{margin-bottom:0;flex-direction:column;align-items:flex-start;gap:8px;padding:12px}
+.sh-grid .sh .si{width:28px;height:28px;border-radius:7px}
+.sh-grid .sh .si svg{width:13px;height:13px}
 </style>
 </head>
 <body>
@@ -916,12 +919,67 @@ function bS(){
   var topUp=mv[0],topDn=mv[mv.length-1];
   var sp=S.players.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
   var p1=S.h1?find(S.h1):null,p2=S.h2?find(S.h2):null,hh=p1&&p2?h2h(p1.id,p2.id):null;
-  var html='<div class="lbl">Hoogtepunten</div>';
+  var html='<div class="lbl">Hoogtepunten</div><div class="sh-grid">';
   if(topStr&&topStr.s>0)html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 4 5 6 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3-1-3 0-6 1-9z"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Langste winserie ooit</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+topStr.p.name+'</div><div class="mono" style="font-size:12px;color:var(--mute);margin-top:2px">'+topStr.s+' op rij</div></div></div>';
   html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Meest actief</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+top.name+'</div><div class="mono" style="font-size:12px;color:var(--mute);margin-top:2px">'+(top.wins+top.losses)+' wedstrijden</div></div></div>';
   if(topUp&&topUp.c>0)html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Stijger van de week</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+topUp.p.name+'</div><div class="mono" style="font-size:12px;color:var(--pos);margin-top:2px;font-weight:600">+'+topUp.c+' ELO &middot; 7d</div></div></div>';
   if(topDn&&topDn.c<0)html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--neg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 9 13 13 9 21 17"/><polyline points="14 17 21 17 21 10"/></svg></div><div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Daler van de week</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+topDn.p.name+'</div><div class="mono" style="font-size:12px;color:var(--neg);margin-top:2px;font-weight:600">'+topDn.c+' ELO &middot; 7d</div></div></div>';
-  html+='<div class="div"></div><div class="lbl">Laatste 10 wedstrijden</div><div class="card" style="padding:4px 14px">';
+
+  // ── 4 extra hoogtepunten ────────────────────────────────
+  // 1. Beste winratio (min 5 wedstrijden)
+  var qualified=act.filter(function(p){return p.wins+p.losses>=5});
+  if(qualified.length){
+    var bestRatio=qualified.reduce(function(a,b){return(a.wins/(a.wins+a.losses))>=(b.wins/(b.wins+b.losses))?a:b});
+    var bPct=Math.round(bestRatio.wins/(bestRatio.wins+bestRatio.losses)*100);
+    html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6.5 7 1-5 4.9 1.2 7L12 18l-6.2 3.4 1.2-7L2 9.5l7-1z"/></svg></div>'+
+    '<div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Beste winratio</div>'+
+    '<div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+bestRatio.name+'</div>'+
+    '<div class="mono" style="font-size:12px;color:var(--gold);margin-top:2px;font-weight:600">'+bPct+'% &middot; '+bestRatio.wins+'W /'+bestRatio.losses+'V</div>'+
+    '</div></div>';
+  }
+  // 2. Grootste upset (hoogste ELO-delta bij een overwinning — underdog wint)
+  if(S.matches.length){
+    var bigUpset=null;
+    S.matches.forEach(function(m){
+      // delta hoog = underdog won (winner had lagere ELO)
+      if(!bigUpset||m.d>bigUpset.d)bigUpset=m;
+    });
+    if(bigUpset){
+      var upW=find(bigUpset.wid),upL=find(bigUpset.lid);
+      var upDate=new Date(bigUpset.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+      if(upW&&upL){
+        html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>'+
+        '<div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Grootste verrassing ooit</div>'+
+        '<div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+upW.name+' vs '+upL.name+'</div>'+
+        '<div class="mono" style="font-size:12px;color:#9b59b6;margin-top:2px;font-weight:600">+'+bigUpset.d+' ELO gewonnen &middot; '+upDate+'</div>'+
+        '</div></div>';
+      }
+    }
+  }
+  // 3. Huidige actieve winserie (wie wint NU op rij)
+  var curStreak=null,curMax=0;
+  act.forEach(function(p){
+    var ms=S.matches.filter(function(m){return m.wid===p.id||m.lid===p.id}).sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+    var cur=0;
+    for(var i=0;i<ms.length;i++){if(ms[i].wid===p.id)cur++;else break;}
+    if(cur>curMax){curMax=cur;curStreak=p;}
+  });
+  if(curStreak&&curMax>1){
+    html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6l.01 0"/><path d="M3 12l.01 0"/><path d="M3 18l.01 0"/></svg></div>'+
+    '<div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Huidige winserie</div>'+
+    '<div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+curStreak.name+'</div>'+
+    '<div class="mono" style="font-size:12px;color:var(--pos);margin-top:2px;font-weight:600">'+curMax+' op rij &middot; nu actief</div>'+
+    '</div></div>';
+  }
+  // 4. Meeste overwinningen totaal
+  var mostWins=act.reduce(function(a,b){return a.wins>=b.wins?a:b});
+  html+='<div class="sh"><div class="si"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--felt)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg></div>'+
+  '<div><div style="font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.02em">Meeste overwinningen</div>'+
+  '<div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:3px;letter-spacing:-.005em">'+mostWins.name+'</div>'+
+  '<div class="mono" style="font-size:12px;color:var(--felt);margin-top:2px;font-weight:600">'+mostWins.wins+' gewonnen wedstrijden</div>'+
+  '</div></div>';
+
+  html+='</div><div class="div"></div><div class="lbl">Laatste 10 wedstrijden</div><div class="card" style="padding:4px 14px">';
   var last10=S.matches.slice(0,10);
   if(last10.length){last10.forEach(function(m){var w=find(m.wid),l=find(m.lid),ds=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--ink);font-weight:400"><strong style="font-weight:700">'+(w?w.name:'?')+'</strong> <span style="color:var(--mute);font-weight:400">vs</span> '+(l?l.name:'?')+'</div><div class="mono" style="font-size:11px;color:var(--mute);margin-top:2px">'+ds+' &middot; +'+m.d+'</div></div><span class="badge bw">won</span></div>'})}
   else html+='<div class="empty" style="padding:12px 0">Nog geen wedstrijden</div>';
