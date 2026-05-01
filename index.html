@@ -507,6 +507,14 @@ html.is-ios .cnt {
   scroll-behavior: smooth;
 }
 
+
+.pijler-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.pijler-select-wrap{margin-bottom:12px}
+.pijler-select-wrap .plbl{margin-bottom:6px}
+.pijler-btn{flex:1;padding:10px 6px;border-radius:var(--rad);border:1.5px solid var(--bor);background:var(--surface);cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;text-align:center;transition:all .15s;-webkit-appearance:none;appearance:none;line-height:1.3;color:var(--mute)}
+.pijler-btn.active{color:#fff;border-color:transparent}
+.pijler-rank-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border-radius:var(--rad);margin-bottom:5px;border:1px solid var(--bor)}
+
 </style>
 </head>
 <body>
@@ -583,7 +591,7 @@ async function dbLoad(){
   var r2=await db.from('matches').select('*').order('created_at',{ascending:false}).limit(200);
   if(r1.error)throw new Error('players: '+String(r1.error.message||r1.error));
   if(r2.error)throw new Error('matches: '+String(r2.error.message||r2.error));
-  S.players=(r1.data||[]).map(function(p){return{id:p.id,name:p.name,elo:p.elo,wins:p.wins,losses:p.losses}});
+  S.players=(r1.data||[]).map(function(p){return{id:p.id,name:p.name,elo:p.elo,wins:p.wins,losses:p.losses,pijler:p.pijler||null}});
   S.matches=(r2.data||[]).map(function(m){return{id:m.id,wid:m.winner_id,lid:m.loser_id,d:m.delta,date:m.created_at}});
 }
 async function dbLoadQueue(){
@@ -737,6 +745,16 @@ async function addQueue(pid){
   await dbLoadQueue();
   var p=find(pid);toast((p?p.name:'Speler')+' staat in de rij! &#129689;');render();
 }
+async function savePijler(pid, pijler){
+  try{
+    var val = pijler || null;
+    await db.from('players').update({pijler: val}).eq('id', pid);
+    S.players = S.players.map(function(p){ return p.id===pid ? Object.assign({},p,{pijler:val}) : p; });
+    toast('Pijler opgeslagen');
+    render();
+  }catch(e){ toast('Fout: '+String(e.message||e)); }
+}
+
 async function addQueueAndBack(pid){
   var ok=await dbAddQueue(pid);
   if(!ok){toast('Staat al in de wachtrij');return}
@@ -1139,6 +1157,45 @@ function bS(){
     hh.ms.forEach(function(m){var won=m.wid===p1.id,d=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--ink);font-weight:500">'+(won?p1.name:p2.name)+' won</div><div class="mono" style="font-size:11px;color:var(--mute);margin-top:2px">'+d+'</div></div><span class="badge '+(won?'bw':'bl')+'">'+(won?p1.name:p2.name)+'</span></div>';});
   }else if(hh)html+='<div style="font-size:13px;color:var(--mute);text-align:center;padding:10px">Nog nooit tegen elkaar gespeeld</div>';
   else html+='<div style="font-size:13px;color:var(--mute);text-align:center;padding:10px">Selecteer twee spelers</div>';
+
+  // ── Pijler klassement ──────────────────────────────────────
+  var pColors={'Omgeving':'#2ecc71','Tender':'#3498db','Tendermanagement':'#9b59b6','Projectbeheersing':'#e67e22','Projectmanagement':'#e74c3c','Asset':'#1abc9c','Staf':'#f39c12'};
+  var pNames=['Omgeving','Tender','Tendermanagement','Projectbeheersing','Projectmanagement','Asset','Staf'];
+  var pijlerStats={};
+  pNames.forEach(function(pl){pijlerStats[pl]={wins:0,losses:0,elo:0,count:0,players:[]};});
+  S.players.forEach(function(p){
+    if(!p.pijler||!pijlerStats[p.pijler])return;
+    var ps=pijlerStats[p.pijler];
+    ps.wins+=p.wins;ps.losses+=p.losses;ps.elo+=p.elo;ps.count++;ps.players.push(p);
+  });
+  // Bereken gemiddelde ELO en sorteer
+  var pijlerRanking=pNames.filter(function(pl){return pijlerStats[pl].count>0}).map(function(pl){
+    var ps=pijlerStats[pl];
+    return{name:pl,avgElo:Math.round(ps.elo/ps.count),wins:ps.wins,losses:ps.losses,count:ps.count,
+      pct:(ps.wins+ps.losses)?Math.round(ps.wins/(ps.wins+ps.losses)*100):0,players:ps.players};
+  }).sort(function(a,b){return b.avgElo-a.avgElo});
+  html+='<div class="div"></div><div class="lbl">Pijler klassement</div>';
+  if(pijlerRanking.length===0){
+    html+='<div class="empty" style="padding:16px 0">Wijs spelers een kennispijler toe<br>via hun profiel</div>';
+  } else {
+    pijlerRanking.forEach(function(pl,i){
+      var col=pColors[pl.name]||'#888';
+      var pos=i+1;
+      var medal=pos===1?'&#127947;':pos===2?'&#129352;':pos===3?'&#129353;':'';
+      html+='<div class="pijler-rank-row">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--mute);width:22px;text-align:center;flex-shrink:0">'+(medal||pos)+'</div>';
+      html+='<div style="width:10px;height:10px;border-radius:50%;background:'+col+';flex-shrink:0"></div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+pl.name+'</div>';
+      html+='<div style="font-size:11px;color:var(--mute);margin-top:2px">'+pl.count+' spelers &middot; '+pl.wins+'W '+pl.losses+'V &middot; '+pl.pct+'%</div>';
+      html+='</div>';
+      html+='<div style="text-align:right;flex-shrink:0">';
+      html+='<div style="font-size:15px;font-weight:700;color:'+col+'">'+pl.avgElo+'</div>';
+      html+='<div style="font-size:10px;color:var(--mute)">gem. ELO</div>';
+      html+='</div></div>';
+    });
+  }
+
   html+='</div>';return html;
 }
 
@@ -1183,6 +1240,19 @@ function bP(){
     html+='<div class="sg"><div class="sb"><div style="font-size:22px;font-weight:800;color:var(--n)">'+tot+'</div><div style="font-size:10px;color:var(--mid);margin-top:3px;font-weight:700;text-transform:uppercase">Gespeeld</div></div>';
     html+='<div class="sb"><div style="font-size:22px;font-weight:800;color:var(--n)">'+pct+'%</div><div style="font-size:10px;color:var(--mid);margin-top:3px;font-weight:700;text-transform:uppercase">Winratio</div></div>';
     html+='<div class="sb"><div style="font-size:22px;font-weight:800;color:var(--n)">'+str+'</div><div style="font-size:10px;color:var(--mid);margin-top:3px;font-weight:700;text-transform:uppercase">Serie</div></div></div>';
+    // Pijler selector — dropdown
+    var PC={'Omgeving':'#2ecc71','Tender':'#3498db','Tendermanagement':'#9b59b6','Projectbeheersing':'#e67e22','Projectmanagement':'#e74c3c','Asset':'#1abc9c','Staf':'#f39c12'};
+    var PIJLERS=['Omgeving','Tender','Tendermanagement','Projectbeheersing','Projectmanagement','Asset','Staf'];
+    var curCol=p.pijler&&PC[p.pijler]?PC[p.pijler]:'var(--bor)';
+    html+='<div style="margin-bottom:12px">';
+    html+='<div class="plbl">Kennispijler</div>';
+    html+='<div style="position:relative">';
+    html+='<span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:10px;height:10px;border-radius:50%;background:'+curCol+';pointer-events:none;z-index:1"></span>';
+    html+='<select onchange="savePijler(\''+p.id+'\',this.value||null)" style="width:100%;padding:12px 14px 12px 32px;border-radius:var(--r);border:1.5px solid '+(p.pijler?curCol:'var(--bor)')+';background:var(--surface);color:var(--ink);font-size:15px;font-family:inherit;-webkit-appearance:none;appearance:none;outline:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%238fa3b8%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center">';
+    html+='<option value="">— Kies kennispijler —</option>';
+    PIJLERS.forEach(function(pl){html+='<option value="'+pl+'"'+(p.pijler===pl?' selected':'')+'>'+pl+'</option>';});
+    html+='</select>';
+    html+='</div></div><div class="div"></div>';
     html+=eloChart(p.id);
     html+='<div class="lbl" style="margin-top:4px">Wedstrijdhistorie</div>';
     if(pm.length)pm.forEach(function(m){var won=m.wid===p.id,opp=find(won?m.lid:m.wid),d=new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});html+='<div class="mi"><div><div style="font-size:13px;color:var(--n);font-weight:600">vs '+(opp?opp.name:'?')+'</div><div style="font-size:11px;color:var(--mid);margin-top:2px">'+d+' &middot; '+(won?'+':'-')+m.d+' ELO</div></div><span class="badge '+(won?'bw':'bl')+'">'+(won?'Gewon.':'Verlor.')+'</span></div>';});
@@ -1196,9 +1266,10 @@ function bP(){
   html2+='<div id="plist">'+a.map(function(p){
     var r2=0;for(var i=0;i<s2.length;i++){if(s2[i].id===p.id){r2=i+1;break}}
     var t2=p.wins+p.losses;
+    var pijlerChip2=p.pijler?'<span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700;color:#fff;background:'+({"Omgeving":"#2ecc71","Tender":"#3498db","Tendermanagement":"#9b59b6","Projectbeheersing":"#e67e22","Projectmanagement":"#e74c3c","Asset":"#1abc9c","Staf":"#f39c12"}[p.pijler]||'#888')+';margin-left:4px">'+p.pijler+'</span>':'';
     var photo2=getPhoto(p.id);
     var av2=photo2?'<img src="'+photo2+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid var(--bor);flex-shrink:0;display:block" alt="">':'<div class="av" style="width:42px;height:42px;font-size:14px">'+ini(p.name)+'</div>';
-    return'<div class="pi pi-lg" onclick="goP(\''+p.id+'\')">'+av2+'<div class="rii"><div class="rname">'+p.name+'</div><div class="rsub">#'+r2+' &middot; '+p.wins+'W '+p.losses+'V'+(t2?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>';
+    return'<div class="pi pi-lg" onclick="goP(\''+p.id+'\')">'+av2+'<div class="rii"><div class="rname">'+p.name+pijlerChip2+'</div><div class="rsub">#'+r2+' &middot; '+p.wins+'W '+p.losses+'V'+(t2?'':' &middot; inactief')+'</div></div><div class="elo">'+p.elo+'</div></div>';
   }).join('')+'</div>';
   return html2;
 }
