@@ -515,6 +515,16 @@ html.is-ios .cnt {
 .pijler-btn.active{color:#fff;border-color:transparent}
 .pijler-rank-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border-radius:var(--rad);margin-bottom:5px;border:1px solid var(--bor)}
 
+
+.k-slider{display:flex;gap:4px;background:var(--surface-2);border-radius:20px;padding:3px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;justify-content:center}
+.k-slider::-webkit-scrollbar{display:none}
+.k-tab{flex-shrink:0;padding:6px 14px;border-radius:16px;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--mute);background:transparent;transition:all .15s;-webkit-appearance:none;appearance:none;white-space:nowrap}
+.k-tab.active{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.k-tab .k-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;position:relative;top:-1px}
+.pijler-expand{cursor:pointer;padding:10px 14px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);margin-bottom:6px}
+.pijler-expand-header{display:flex;align-items:center;gap:10px}
+.pijler-players{margin-top:10px;border-top:1px solid var(--line-2);padding-top:10px}
+
 </style>
 </head>
 <body>
@@ -568,7 +578,7 @@ html.is-ios .cnt {
 var _sb=supabase,ELO0=1200,K=32,PWD='Hetistijdvooreennieuwestart';
 var NAMES=["Anouk","Arjen","David","Dennis","Dorte","Elise","Femke","Ferry","Floortje","Fyodor","Gert Jan","Giovanni","Hans","Jacob","Jacques","Jasper d.","Jasper S.","Jelle","Jesse B.","Jesse v.","Jesse W.","Joram","Judith","Kirsten","Kitty","Koen","Laith","Laurens","Lizzy","Lotfy","Mara","Mark O.","Mark S.","Marvin","Max","Michel","Myrthe","Natasja","Nicholas","Niels d.","Niels H.","Ott","Pieter","Redginald","Roan","Robbert L.","Robbert v.","Roland","Rolf","Ruben","Ruurd","Sasha","Stan","Thijs","Ties","Tim","Tjalling","Tom","Veronique","Wesley","Wouter","Alexander","Allard","Dick","Douwe","Esm\u00e9e","Ileen","John","Kees","Kelly","Nick","Nicole","Philine","Saar","Sander","Yashica","Rob"];
 var db=null;
-var S={players:[],matches:[],queue:[],view:'k',selP:null,step:'form',pend:null,p1:null,p2:null,wid:null,srch:null,sq:'',h1:'',h2:'',qSrchQ:''};
+var S={players:[],matches:[],queue:[],view:'k',kView:'overall',expandedPijler:null,selP:null,step:'form',pend:null,middenPocket:false,p1:null,p2:null,wid:null,srch:null,sq:'',h1:'',h2:'',qSrchQ:''};
 
 // ── Helpers ──────────────────────────────────────────────────
 function uid(){return Math.random().toString(36).slice(2,9)}
@@ -666,7 +676,7 @@ function prep(){
   if(!S.wid){toast('Selecteer de winnaar');return}
   var w=p1.id===S.wid?p1:p2,l=w===p1?p2:p1;
   var d=Math.round(K*(1-1/(1+Math.pow(10,(l.elo-w.elo)/400))));
-  S.pend={wid:w.id,lid:l.id,wn:w.name,ln:l.name,we:w.elo,le:l.elo,ww:w.wins,ll:l.losses,d:d};
+  S.middenPocket=false;S.pend={wid:w.id,lid:l.id,wn:w.name,ln:l.name,we:w.elo,le:l.elo,ww:w.wins,ll:l.losses,d:d,midden:false};
   S.step='confirm';render();
 }
 async function ok(){
@@ -675,7 +685,7 @@ async function ok(){
     await Promise.all([
       db.from('players').update({elo:m.we+m.d,wins:m.ww+1}).eq('id',m.wid),
       db.from('players').update({elo:Math.max(200,m.le-m.d),losses:m.ll+1}).eq('id',m.lid),
-      db.from('matches').insert({winner_id:m.wid,loser_id:m.lid,delta:m.d})
+      db.from('matches').insert({winner_id:m.wid,loser_id:m.lid,delta:m.d,midden_pocket:m.midden||false})
     ]);
     await dbLoad();
     await dbLoadQueue();
@@ -693,6 +703,17 @@ async function ok(){
     render();
   }catch(e){toast('Fout: '+e.message)}
 }
+function toggleMidden(val){
+  S.middenPocket = val;
+  // Update ELO delta — double if midden
+  if(S.pend){
+    var baseD = Math.round(K*(1-1/(1+Math.pow(10,(S.pend.le-S.pend.we)/400))));
+    S.pend.d = val ? baseD*2 : baseD;
+    S.pend.midden = val;
+  }
+  render();
+}
+
 function cancel(){S.step='form';S.pend=null;render()}
 
 // ── Confetti ─────────────────────────────────────────────────
@@ -965,17 +986,76 @@ function bK(){
     html+='<div class="lbl">Klassement</div><div class="empty">Nog geen wedstrijden.<br>Tik op de plus knop hieronder.</div>';
     return html;
   }
-  html+='<div class="lbl">Klassement &middot; '+act.length+' actieve spelers</div>';
-  var mid=Math.ceil(act.length/2);
-  html+='<div class="kcols">'+act.map(function(p,i){
-    var card=kiCard(p,i+1,act.length);
-    if(i+1===mid && act.length>3){
-      card+='<div class="ki-mid"><span>middenmoot</span></div>';
+  // ── Slider: Algemeen | Per pijler ─────────────────────
+  html+='<div class="k-slider">';
+  html+='<button class="k-tab'+(S.kView==='overall'?' active':'')+'" onclick="S.kView=\'overall\';S.expandedPijler=null;render()">Algemeen</button>';
+  html+='<button class="k-tab'+(S.kView==='pijlers'?' active':'')+'" onclick="S.kView=\'pijlers\';render()">Per pijler</button>';
+  html+='</div>';
+
+  if(S.kView==='pijlers'){
+    var _PC={"Omgeving": "#2ecc71", "Tender": "#3498db", "Tendermanagement": "#9b59b6", "Projectbeheersing": "#e67e22", "Projectmanagement": "#e74c3c", "Asset": "#1abc9c", "Staf": "#f39c12"};
+    var _PL=['Omgeving','Tender','Tendermanagement','Projectbeheersing','Projectmanagement','Asset','Staf'];
+    var pRows=_PL.map(function(pl){
+      var players=act.filter(function(p){return p.pijler===pl}).sort(function(a,b){return b.elo-a.elo});
+      if(!players.length)return null;
+      var wins=players.reduce(function(s,p){return s+p.wins},0);
+      var losses=players.reduce(function(s,p){return s+p.losses},0);
+      var avgElo=Math.round(players.reduce(function(s,p){return s+p.elo},0)/players.length);
+      var pct=(wins+losses)?Math.round(wins/(wins+losses)*100):0;
+      return{name:pl,players:players,wins:wins,losses:losses,avgElo:avgElo,pct:pct,col:_PC[pl]||'#888'};
+    }).filter(Boolean).sort(function(a,b){return b.avgElo-a.avgElo});
+    if(!pRows.length){
+      html+='<div class="empty">Wijs spelers een kennispijler toe via hun profiel.</div>';
+    } else {
+      html+='<div class="lbl">Pijler klassement &middot; '+pRows.length+' pijlers</div>';
+      for(var pi=0;pi<pRows.length;pi++){
+        var pl=pRows[pi];
+        var pos=pi+1;
+        var medal=pos===1?'&#127947;':pos===2?'&#129352;':pos===3?'&#129353;':'';
+        var isOpen=S.expandedPijler===pl.name;
+        html+='<div style="background:var(--surface);border-radius:var(--r);border:1px solid '+(isOpen?pl.col:'var(--line)')+';margin-bottom:6px;overflow:hidden">';
+        html+='<div onclick="S.expandedPijler='+(isOpen?'null':"'"+pl.name+"'")+';render()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer">';
+        html+='<div style="font-size:13px;font-weight:700;color:var(--mute);width:22px;text-align:center;flex-shrink:0">'+(medal||pos)+'</div>';
+        html+='<div style="width:10px;height:10px;border-radius:50%;background:'+pl.col+';flex-shrink:0"></div>';
+        html+='<div style="flex:1;min-width:0">';
+        html+='<div style="font-size:14px;font-weight:600;color:var(--ink)">'+pl.name+'</div>';
+        html+='<div style="font-size:11px;color:var(--mute);margin-top:1px">'+pl.players.length+' spelers &middot; '+pl.wins+'W '+pl.losses+'V &middot; '+pl.pct+'%</div>';
+        html+='</div>';
+        html+='<div style="text-align:right;flex-shrink:0;margin-right:8px">';
+        html+='<div style="font-size:15px;font-weight:700;color:'+pl.col+'">'+pl.avgElo+'</div>';
+        html+='<div style="font-size:10px;color:var(--mute)">gem. ELO</div>';
+        html+='</div>';
+        html+='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .2s;transform:'+(isOpen?'rotate(90deg)':'rotate(0deg)')+'"><polyline points="9 18 15 12 9 6"/></svg>';
+        html+='</div>';
+        if(isOpen){
+          html+='<div style="border-top:1px solid var(--line-2);padding:8px 14px 12px">';
+          for(var pp=0;pp<pl.players.length;pp++){
+            var sp=pl.players[pp];
+            html+='<div onclick="goP(\''+sp.id+'\''+')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-2);cursor:pointer">';
+            html+='<div style="font-size:12px;font-weight:600;color:var(--mute);width:18px;text-align:right;flex-shrink:0">'+(pp+1)+'</div>';
+            html+=kiAvatar(sp.id,30);
+            html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sp.name+'</div>';
+            html+='<div style="font-size:11px;color:var(--mute)">'+sp.wins+'W &middot; '+sp.losses+'V</div></div>';
+            html+='<div style="font-size:14px;font-weight:700;color:'+pl.col+'">'+sp.elo+'</div>';
+            html+='</div>';
+          }
+          html+='</div>';
+        }
+        html+='</div>';
+      }
     }
-    return card;
-  }).join('')+'</div>';
+  } else {
+    html+='<div class="lbl">Alle spelers &middot; '+act.length+' actief</div>';
+    var mid=Math.ceil(act.length/2);
+    html+='<div class="kcols">'+act.map(function(p,i){
+      var card=kiCard(p,i+1,act.length);
+      if(i+1===mid && act.length>3){card+='<div class="ki-mid"><span>middenmoot</span></div>';}
+      return card;
+    }).join('')+'</div>';
+  }
   return html;
 }
+
 
 function bW(){
   var p1=find(S.p1),p2=find(S.p2);
@@ -1018,6 +1098,14 @@ function bConf(){
     '<div class="cx">'+kiAvatar(m.lid,72)+'<div style="font-size:13px;font-weight:500;color:var(--ink)">'+m.ln+'</div><div class="mono" style="font-size:11px;color:var(--mute)">'+m.le+' &#8594; '+nle+'</div><div class="mono" style="font-size:13px;color:var(--neg);font-weight:600;margin-top:4px">-'+m.d+'</div></div>'+
     '</div>'+
     (nextP&&nextP.id!==m.wid?'<div style="background:var(--felt-l);border:1px solid var(--felt);border-radius:var(--r);padding:10px 14px;width:100%;margin-bottom:14px;text-align:left;display:flex;align-items:center;gap:11px">'+kiAvatar(nextP.id,30)+'<div><div style="font-size:10px;font-weight:500;color:var(--felt-d);letter-spacing:.04em">VOLGENDE SPELER DIE AAN DE BEURT IS</div><div style="font-size:14px;font-weight:600;color:var(--ink);margin-top:1px">'+nextP.name+'</div></div></div>':'')+
+    '<div style="margin-bottom:16px;background:var(--surface-2);border-radius:var(--r);padding:14px">'+
+    '<div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="font-size:16px">🎯</span> Eindigde in de middenpocket?</div>'+
+    '<div style="display:flex;gap:8px">'+
+    '<button onclick="toggleMidden(false)" style="flex:1;padding:9px;border-radius:var(--r-sm);border:1.5px solid '+(m.midden?'var(--line)':'var(--felt)')+';background:'+(m.midden?'var(--surface)':'var(--felt-l)')+';font-size:13px;font-weight:600;color:'+(m.midden?'var(--mute)':'var(--felt-d)')+';font-family:inherit;cursor:pointer">Nee</button>'+
+    '<button onclick="toggleMidden(true)" style="flex:1;padding:9px;border-radius:var(--r-sm);border:1.5px solid '+(m.midden?'var(--felt)':'var(--line)')+';background:'+(m.midden?'var(--felt)':'var(--surface)')+';font-size:13px;font-weight:600;color:'+(m.midden?'#fff':'var(--mute)')+';font-family:inherit;cursor:pointer">Ja — 2× ELO! 🎯</button>'+
+    '</div>'+
+    (m.midden?'<div style="font-size:11px;color:var(--felt-d);font-weight:600;margin-top:8px;text-align:center">+'+m.d+' ELO (dubbel!)</div>':'')+
+    '</div>'+
     '<div style="display:flex;gap:8px;width:100%"><button class="obtn" onclick="cancel()" style="flex:1">Annuleer</button><button class="btn" onclick="ok()" style="flex:2">Bevestig</button></div>'+
     '</div>';
 }
@@ -1182,17 +1270,38 @@ function bS(){
       var col=pColors[pl.name]||'#888';
       var pos=i+1;
       var medal=pos===1?'&#127947;':pos===2?'&#129352;':pos===3?'&#129353;':'';
-      html+='<div class="pijler-rank-row">';
+      var isOpen=S.expandedPijler===pl.name;
+      // Header — klikbaar
+      html+='<div class="pijler-expand" onclick="S.expandedPijler='+(isOpen?'null':"'"+pl.name+"'")+';render()">';
+      html+='<div class="pijler-expand-header">';
       html+='<div style="font-size:13px;font-weight:700;color:var(--mute);width:22px;text-align:center;flex-shrink:0">'+(medal||pos)+'</div>';
       html+='<div style="width:10px;height:10px;border-radius:50%;background:'+col+';flex-shrink:0"></div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+pl.name+'</div>';
-      html+='<div style="font-size:11px;color:var(--mute);margin-top:2px">'+pl.count+' spelers &middot; '+pl.wins+'W '+pl.losses+'V &middot; '+pl.pct+'%</div>';
+      html+='<div style="font-size:14px;font-weight:700;color:var(--ink)">'+pl.name+'</div>';
+      html+='<div style="font-size:11px;color:var(--mute);margin-top:1px">'+pl.count+' spelers &middot; '+pl.wins+'W '+pl.losses+'V &middot; '+pl.pct+'%</div>';
       html+='</div>';
-      html+='<div style="text-align:right;flex-shrink:0">';
+      html+='<div style="text-align:right;flex-shrink:0;margin-right:8px">';
       html+='<div style="font-size:15px;font-weight:700;color:'+col+'">'+pl.avgElo+'</div>';
       html+='<div style="font-size:10px;color:var(--mute)">gem. ELO</div>';
-      html+='</div></div>';
+      html+='</div>';
+      html+='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .2s;transform:'+(isOpen?'rotate(90deg)':'rotate(0deg)')+'"><polyline points="9 18 15 12 9 6"/></svg>';
+      html+='</div>';
+      // Expanded player list
+      if(isOpen){
+        html+='<div class="pijler-players">';
+        var pijlerPlayersSorted=pl.players.slice().sort(function(a,b){return b.elo-a.elo});
+        pijlerPlayersSorted.forEach(function(pp,pi){
+          html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-2)">';
+          html+='<div style="font-size:12px;font-weight:600;color:var(--mute);width:18px;text-align:right;flex-shrink:0">'+(pi+1)+'</div>';
+          html+=kiAvatar(pp.id,28);
+          html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+pp.name+'</div>';
+          html+='<div style="font-size:11px;color:var(--mute)">'+pp.wins+'W &middot; '+pp.losses+'V</div></div>';
+          html+='<div style="font-size:13px;font-weight:700;color:'+col+'">'+pp.elo+'</div>';
+          html+='</div>';
+        });
+        html+='</div>';
+      }
+      html+='</div>';
     });
   }
 
